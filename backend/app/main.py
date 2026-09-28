@@ -10,7 +10,7 @@ from app.models.paciente import Paciente
 from app.models.agendamento import Agendamento, StatusAgendamento
 from app.models.prontuario import ProntuarioPsico, StatusProntuario
 from app.services.crypto_service import get_password_hash
-from app.routers import auth, pacientes, agendamentos, prontuarios, auditoria
+from app.routers import auth, pacientes, agendamentos, prontuarios, auditoria, relatorios
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -232,6 +232,7 @@ app.include_router(pacientes.router, prefix=settings.API_V1_STR)
 app.include_router(agendamentos.router, prefix=settings.API_V1_STR)
 app.include_router(prontuarios.router, prefix=settings.API_V1_STR)
 app.include_router(auditoria.router, prefix=settings.API_V1_STR)
+app.include_router(relatorios.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

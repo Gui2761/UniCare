@@ -71,6 +71,22 @@ export function Sidebar() {
               </NavLink>
             </li>
           </ul>
+
+          {(user?.perfil === 'rt' || user?.perfil === 'supervisor') && (
+            <>
+              <div className="my-6 border-t border-gray-100"></div>
+              <h2 className="text-xs font-semibold text-purple-600 mb-4 uppercase tracking-wider flex items-center gap-1">
+                <span>📊</span> Gestão & RT (RF-006)
+              </h2>
+              <ul className="space-y-2">
+                <li>
+                  <NavLink to="/rt/relatorios" className={getLinkStyle}>
+                    <span>📈</span> Indicadores & LGPD
+                  </NavLink>
+                </li>
+              </ul>
+            </>
+          )}
         </nav>
       </div>
 

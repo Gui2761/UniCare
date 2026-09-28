@@ -13,6 +13,7 @@ import { UnauthorizedPage } from './features/auth/pages/UnauthorizedPage';
 import { ReceptionDashboard } from './features/reception/pages/ReceptionDashboard';
 import { DentalRecordPage } from './features/dental-record/pages/DentalRecordPage';
 import { SupervisionPage } from './features/supervision/pages/SupervisionPage';
+import { RTManagementPage } from './features/supervision/pages/RTManagementPage';
 
 // Psicologia
 import { PsyReceptionDashboard } from './features/psychology/reception/pages/PsyReceptionDashboard';
@@ -90,6 +91,16 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={['supervisor', 'rt']} allowedCourses={['psicologia']}>
                   <PsySupervisionPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Painel Gerencial & Relatórios da RT (RF-006 & RN-003) */}
+            <Route
+              path="/rt/relatorios"
+              element={
+                <ProtectedRoute allowedRoles={['rt', 'supervisor']}>
+                  <RTManagementPage />
                 </ProtectedRoute>
               }
             />

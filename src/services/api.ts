@@ -231,6 +231,43 @@ class ApiService {
   async getAuditoria(limite = 50): Promise<ApiLogAuditoria[]> {
     return this.request<ApiLogAuditoria[]>(`/auditoria?limite=${limite}`);
   }
+
+  // --- Relatórios Estatísticos (RF-006) ---
+  async getEstatisticas(): Promise<RelatorioEstatisticas> {
+    return this.request<RelatorioEstatisticas>('/relatorios/estatisticas');
+  }
+}
+
+export interface RelatorioEstatisticas {
+  resumo_executivo: {
+    instituicao: string;
+    unidade: string;
+    total_pacientes: number;
+    total_agendamentos: number;
+    taxa_comparecimento_pct: number;
+    taxa_absenteismo_pct: number;
+  };
+  distribuicao_cursos: {
+    psicologia: {
+      pacientes_ativos: number;
+      agendamentos_totais: number;
+      prontuarios_submetidos: number;
+      prontuarios_aguardando_visto: number;
+      prontuarios_validados: number;
+      prontuarios_devolvidos: number;
+    };
+    odontologia: {
+      pacientes_ativos: number;
+      agendamentos_totais: number;
+      fichas_clinicas_totais: number;
+    };
+  };
+  agendamentos_por_status: Record<string, number>;
+  conformidade_legal: {
+    pacientes_menores_com_responsavel: number;
+    total_logs_rastreados_lgpd: number;
+    normas_atendidas: string[];
+  };
 }
 
 export const api = new ApiService();
