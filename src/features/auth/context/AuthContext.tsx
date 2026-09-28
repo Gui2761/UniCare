@@ -68,13 +68,16 @@ export const PRESET_USERS: Record<string, User> = {
   },
 };
 
+import { api } from '../../../services/api';
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (presetKey: string) => void;
+  login: (presetKey: string) => Promise<void>;
   loginCustom: (user: User) => void;
+  loginWithCredentials: (emailOuMatricula: string, senha: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  switchUser: (presetKey: string) => void;
+  switchUser: (presetKey: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -91,7 +94,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Fallback para usuário inicial
     }
-    // Usuário padrão inicial: Estagiário de Psicologia para demonstração imediata
     return PRESET_USERS.estagiario_psico;
   });
 
@@ -103,22 +105,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = (presetKey: string) => {
+  const syncBackendToken = async (matricula: string) => {
+    try {
+      await api.login(matricula, 'unicare123');
+    } catch {
+      // Backend pode estar em inicialização ou operando offline
+    }
+  };
+
+  const login = async (presetKey: string) => {
     const selected = PRESET_USERS[presetKey] || PRESET_USERS.estagiario_psico;
     setUser(selected);
+    await syncBackendToken(selected.matricula);
   };
 
   const loginCustom = (newUser: User) => {
     setUser(newUser);
   };
 
+  const loginWithCredentials = async (emailOuMatricula: string, senha: string) => {
+    try {
+      const res = await api.login(emailOuMatricula, senha);
+      const newUser: User = {
+        id: Date.now(),
+        nome: res.nome,
+        email: emailOuMatricula.includes('@') ? emailOuMatricula : `${emailOuMatricula}@uninassau.edu.br`,
+        perfil: res.perfil,
+        curso: res.curso === 'geral' ? 'odontologia' : res.curso,
+        matricula: res.matricula,
+      };
+      setUser(newUser);
+      return { success: true };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Falha ao autenticar com o servidor.';
+      return { success: false, message: errorMsg };
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
+    api.clearToken();
   };
 
-  const switchUser = (presetKey: string) => {
-    login(presetKey);
+  const switchUser = async (presetKey: string) => {
+    await login(presetKey);
   };
 
   return (
@@ -128,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         login,
         loginCustom,
+        loginWithCredentials,
         logout,
         switchUser,
       }}

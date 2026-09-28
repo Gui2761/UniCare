@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api, type ApiPaciente, type ApiAgendamento, type ApiProntuarioPsico } from '../../../services/api';
 
 export type StatusAgendamento = 'AGENDADO' | 'PRESENTE' | 'EM_ATENDIMENTO' | 'CONCLUIDO' | 'FALTOU' | 'CANCELADO';
 export type StatusProntuario = 'EM_ELABORACAO' | 'AGUARDANDO_VALIDACAO' | 'VALIDADO' | 'DEVOLVIDO_PARA_AJUSTE';
@@ -345,6 +346,85 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [planosTratamento] = useState<ItemPlanoTratamento[]>(INITIAL_PLANOS);
 
+  // Sincronização inicial com o backend FastAPI (se disponível)
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBackendData() {
+      try {
+        const [apiPacientes, apiAgendamentos, apiProntuarios] = await Promise.allSettled([
+          api.getPacientes(),
+          api.getAgendamentos(),
+          api.getProntuariosPsico(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (apiPacientes.status === 'fulfilled' && apiPacientes.value.length > 0) {
+          const mapped: Paciente[] = apiPacientes.value.map((p: ApiPaciente) => ({
+            id: p.id,
+            nome: p.nome,
+            cpf: p.cpf_rg,
+            dataNascimento: p.data_nascimento,
+            telefone: p.telefone,
+            ehMenor: p.eh_menor,
+            nomeResponsavel: p.nome_responsavel,
+            contatoResponsavel: p.contato_responsavel,
+            curso: p.curso,
+            prontuarioAtivo: p.prontuario_ativo,
+          }));
+          setPacientes(mapped);
+        }
+
+        if (apiAgendamentos.status === 'fulfilled' && apiAgendamentos.value.length > 0) {
+          const mapped: Agendamento[] = apiAgendamentos.value.map((a: ApiAgendamento) => ({
+            id: a.id,
+            pacienteId: a.paciente_id,
+            pacienteNome: a.paciente_nome,
+            estagiarioNome: a.estagiario_nome,
+            estagiarioMatricula: a.estagiario_matricula,
+            curso: a.curso,
+            horario: a.horario,
+            turno: a.turno,
+            salaOuCadeira: a.sala_ou_cadeira,
+            tipoConsulta: a.tipo_consulta,
+            status: a.status,
+            observacaoLogistica: a.observacao_logistica,
+          }));
+          setAgendamentos(mapped);
+        }
+
+        if (apiProntuarios.status === 'fulfilled' && apiProntuarios.value.length > 0) {
+          const mapped: EvolucaoPsico[] = apiProntuarios.value.map((pr: ApiProntuarioPsico) => ({
+            id: pr.id,
+            pacienteId: pr.paciente_id,
+            pacienteNome: pr.paciente_nome,
+            estagiarioNome: pr.estagiario_nome,
+            estagiarioMatricula: pr.estagiario_matricula,
+            supervisorNome: pr.supervisor_nome || 'Prof. Dr. Robert Santos do Carmo',
+            dataSessao: pr.data_sessao,
+            numeroSessao: pr.numero_sessao,
+            inicioTexto: pr.inicio_sessao_texto,
+            meioTexto: pr.meio_sessao_texto,
+            fimTexto: pr.fim_sessao_texto,
+            parecerSupervisor: pr.parecer_supervisor,
+            status: pr.status,
+            submetidoEm: pr.criado_em ? new Date(pr.criado_em).toLocaleDateString('pt-BR') : 'Hoje',
+          }));
+          setEvolucoesPsico(mapped);
+        }
+      } catch (err) {
+        console.info('UniCare: operando com cache local/mock ativo.', err);
+      }
+    }
+
+    loadBackendData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_PREFIX + 'pacientes', JSON.stringify(pacientes));
   }, [pacientes]);
@@ -374,28 +454,73 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return { success: false, message: 'Para pacientes menores de idade, é obrigatório registrar o Responsável Legal e Contato!' };
     }
 
+    const tempId = Date.now();
     const novoPaciente: Paciente = {
       ...dados,
-      id: Date.now(),
+      id: tempId,
       prontuarioAtivo: true,
     };
 
     setPacientes((prev) => [novoPaciente, ...prev]);
+
+    // Sincronização assíncrona com o backend FastAPI
+    api.createPaciente({
+      nome: dados.nome,
+      cpf_rg: dados.cpf,
+      data_nascimento: dados.dataNascimento,
+      telefone: dados.telefone,
+      eh_menor: dados.ehMenor,
+      nome_responsavel: dados.nomeResponsavel,
+      contato_responsavel: dados.contatoResponsavel,
+      curso: dados.curso,
+    }).then((created) => {
+      setPacientes((prev) =>
+        prev.map((p) => (p.id === tempId ? { ...p, id: created.id } : p))
+      );
+    }).catch((err) => {
+      console.warn('Backend sync aviso (paciente mantido localmente):', err);
+    });
+
     return { success: true, message: 'Paciente cadastrado com sucesso!', paciente: novoPaciente };
   };
 
   const adicionarAgendamento = (novo: Omit<Agendamento, 'id'>) => {
+    const tempId = Date.now();
     const ag: Agendamento = {
       ...novo,
-      id: Date.now(),
+      id: tempId,
     };
     setAgendamentos((prev) => [ag, ...prev]);
+
+    // Sincronização assíncrona com o backend FastAPI
+    api.createAgendamento({
+      paciente_id: novo.pacienteId,
+      paciente_nome: novo.pacienteNome,
+      estagiario_nome: novo.estagiarioNome,
+      estagiario_matricula: novo.estagiarioMatricula,
+      curso: novo.curso,
+      horario: novo.horario,
+      turno: novo.turno,
+      sala_ou_cadeira: novo.salaOuCadeira,
+      tipo_consulta: novo.tipoConsulta,
+      observacao_logistica: novo.observacaoLogistica,
+    }).then((created) => {
+      setAgendamentos((prev) =>
+        prev.map((item) => (item.id === tempId ? { ...item, id: created.id } : item))
+      );
+    }).catch((err) => {
+      console.warn('Backend sync aviso (agendamento mantido localmente):', err);
+    });
   };
 
   const atualizarStatusAgendamento = (id: number, status: StatusAgendamento) => {
     setAgendamentos((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status } : a))
     );
+
+    api.updateAgendamentoStatus(id, status).catch((err) => {
+      console.warn('Backend sync aviso (status mantido localmente):', err);
+    });
   };
 
   const adicionarDemanda = (d: Omit<DemandaEstagio, 'id' | 'status' | 'dataSolicitacao'>) => {
@@ -412,16 +537,40 @@ export const ClinicProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setEvolucoesPsico((prev) =>
       prev.map((e) => (e.id === id ? { ...e, status: decisao, parecerSupervisor: parecer } : e))
     );
+
+    api.homologarProntuarioPsico(id, decisao, parecer).catch((err) => {
+      console.warn('Backend sync aviso (homologação mantida localmente):', err);
+    });
   };
 
   const adicionarEvolucaoPsico = (e: Omit<EvolucaoPsico, 'id' | 'status' | 'submetidoEm'>) => {
+    const tempId = Date.now();
     const nova: EvolucaoPsico = {
       ...e,
-      id: Date.now(),
-      status: 'AGARDANDO_VALIDACAO' as unknown as StatusProntuario,
+      id: tempId,
+      status: 'AGUARDANDO_VALIDACAO',
       submetidoEm: new Date().toLocaleString('pt-BR'),
     };
     setEvolucoesPsico((prev) => [nova, ...prev]);
+
+    api.createProntuarioPsico({
+      paciente_id: e.pacienteId,
+      paciente_nome: e.pacienteNome,
+      estagiario_nome: e.estagiarioNome,
+      estagiario_matricula: e.estagiarioMatricula,
+      supervisor_nome: e.supervisorNome,
+      data_sessao: e.dataSessao,
+      numero_sessao: e.numeroSessao,
+      inicio_sessao_texto: e.inicioTexto,
+      meio_sessao_texto: e.meioTexto,
+      fim_sessao_texto: e.fimTexto,
+    }).then((created) => {
+      setEvolucoesPsico((prev) =>
+        prev.map((item) => (item.id === tempId ? { ...item, id: created.id } : item))
+      );
+    }).catch((err) => {
+      console.warn('Backend sync aviso (evolução mantida localmente):', err);
+    });
   };
 
   return (
