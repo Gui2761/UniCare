@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useClinic, StatusAgendamento } from '../../clinic/context/ClinicContext';
+import { useClinic } from '../../clinic/context/ClinicContext';
+import type { StatusAgendamento } from '../../clinic/context/ClinicContext';
 
 interface AppointmentTableProps {
   cursoFiltro?: 'psicologia' | 'odontologia';

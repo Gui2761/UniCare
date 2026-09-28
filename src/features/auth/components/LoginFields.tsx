@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, PRESET_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 type RoleType = 'estudante' | 'docente' | 'recepcao';
 

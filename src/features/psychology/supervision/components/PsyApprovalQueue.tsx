@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useClinic, EvolucaoPsico } from '../../../clinic/context/ClinicContext';
+import { useClinic } from '../../../clinic/context/ClinicContext';
+import type { EvolucaoPsico } from '../../../clinic/context/ClinicContext';
 
 export function PsyApprovalQueue() {
   const { evolucoesPsico, homologarEvolucaoPsico } = useClinic();
