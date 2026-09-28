@@ -5,37 +5,39 @@ import { AppointmentTable } from '../components/AppointmentTable';
 import { StudentDemandPanel } from '../components/StudentDemandPanel';
 import { NewPatientModal } from '../components/NewPatientModal';
 import { NewAppointmentModal } from '../components/NewAppointmentModal';
+import {
+  CalendarIcon,
+  UserGroupIcon,
+} from '../../../components/icons/CorporateIcons';
 
 export function ReceptionDashboard() {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex font-sans">
+    <div className="min-h-screen bg-slate-50 flex font-sans">
       <Sidebar />
 
       {/* Área Principal */}
       <main className="flex-1 ml-64 p-8">
         {/* Cabeçalho da Página */}
-        <header className="flex justify-between items-start mb-6">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 mb-2 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-700 mb-1 uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Terminal de Recepção Integrada • Odontologia
+              Terminal de Recepção • Odontologia Integrada
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Agenda Diária da Recepção</h1>
-            <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
-              <span>📅 Terça-feira, 15 de Setembro de 2026</span>
-              <span className="text-gray-300">|</span>
-              <span>Horário Atual: 14:57:18</span>
-              <span className="text-gray-300">|</span>
-              <span className="text-blue-600 font-bold">Clínica Odontológica UNINASSAU</span>
-            </div>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              Agenda Diária de Atendimentos Odontológicos
+            </h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Clínica Odontológica UNINASSAU • Triagem e Gestão de Cadeiras
+            </p>
           </div>
 
           <div className="text-right">
-            <p className="text-sm font-semibold text-gray-900">Coordenação de Odontologia</p>
-            <p className="text-xs text-gray-500">Profa. Dra. Bianca Nubia (CRO-SE 4512)</p>
+            <p className="text-xs font-bold text-slate-900">Coordenação de Odontologia</p>
+            <p className="text-[10px] text-slate-500 font-mono">Supervisão: Profa. Dra. Bianca Nubia (CRO-SE 4512)</p>
           </div>
         </header>
 
@@ -43,27 +45,29 @@ export function ReceptionDashboard() {
         <ReceptionStats />
 
         {/* Botões de Ação para Recepção */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-3 mb-6">
           <button
             onClick={() => setIsPatientModalOpen(true)}
-            className="bg-[#0a1526] hover:bg-black text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+            className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs"
           >
-            <span>👤+</span> Novo Cadastro de Paciente (UC-03)
+            <UserGroupIcon className="w-4 h-4" />
+            <span>Novo Cadastro de Paciente (UC-03)</span>
           </button>
           <button
             onClick={() => setIsAppointmentModalOpen(true)}
-            className="bg-[#0056b3] hover:bg-blue-800 text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs"
           >
-            <span>📅+</span> Novo Agendamento Clínico (UC-02)
+            <CalendarIcon className="w-4 h-4" />
+            <span>Novo Agendamento Clínico (UC-02)</span>
           </button>
         </div>
 
-        {/* Layout Grid: Tabela de Atendimentos + Painel de Demandas de Alunos */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          <div className="xl:col-span-3 space-y-6">
+        {/* Grid com Tabela e Demanda de Alunos */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
             <AppointmentTable cursoFiltro="odontologia" />
           </div>
-          <div className="xl:col-span-1 space-y-6">
+          <div className="lg:col-span-1">
             <StudentDemandPanel cursoFiltro="odontologia" />
           </div>
         </div>

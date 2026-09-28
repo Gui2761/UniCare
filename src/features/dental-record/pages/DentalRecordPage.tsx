@@ -5,73 +5,113 @@ import OdontogramApp from '../components/OdontogramaViewer';
 import Periodograma from '../components/PeriodogramaViewer';
 import { DentalEvolutionTab } from '../components/DentalEvolutionTab';
 import { TreatmentPlanTab } from '../components/TreatmentPlanTab';
+import { useClinic } from '../../clinic/context/ClinicContext';
+import {
+  DocumentTextIcon,
+  ClipboardDocumentCheckIcon,
+  ExclamationTriangleIcon,
+  ShieldCheckIcon,
+} from '../../../components/icons/CorporateIcons';
 
 export function DentalRecordPage() {
+  const { pacientes } = useClinic();
+  const pacientesOdonto = pacientes.filter(
+    (p) => p.curso === 'odontologia' || p.curso === 'ambos'
+  );
+
+  const [selectedPatientId, setSelectedPatientId] = useState<number>(
+    pacientesOdonto[0]?.id || 2
+  );
+  const pacienteSelecionado =
+    pacientesOdonto.find((p) => p.id === selectedPatientId) || pacientesOdonto[0];
+
   const [activeTab, setActiveTab] = useState<'anamnese' | 'evolucao' | 'tratamento'>('anamnese');
 
   const getTabStyle = (tabName: 'anamnese' | 'evolucao' | 'tratamento') => {
     return `px-5 py-3 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
       activeTab === tabName
-        ? 'text-blue-600 border-blue-600 bg-blue-50/30'
-        : 'text-gray-500 border-transparent hover:text-gray-900 hover:border-gray-200'
+        ? 'text-slate-900 border-slate-900 bg-slate-50'
+        : 'text-slate-500 border-transparent hover:text-slate-900 hover:border-slate-200'
     }`;
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex font-sans">
+    <div className="min-h-screen bg-slate-50 flex font-sans">
       <Sidebar />
 
       <main className="flex-1 ml-64 p-8">
-        <div className="text-xs text-gray-500 mb-4 flex items-center gap-2">
-          <span>Módulos Clínicos</span>
-          <span>/</span>
-          <span className="text-blue-600 font-bold">Ficha Odontológica</span>
-          <span>/</span>
-          <span>Prontuário Eletrônico #0884/26</span>
+        {/* Topo / Breadcrumb Corporativo com Seletor de Paciente */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="text-xs text-slate-500 flex items-center gap-2">
+            <span className="font-semibold text-slate-400 uppercase tracking-wider text-[11px]">
+              Clínica Odontológica Integrada
+            </span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-900 font-bold">Ficha Clínica & Odontograma 2D</span>
+          </div>
+
+          <div className="w-full md:w-72">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              Selecionar Paciente da Clínica
+            </label>
+            <select
+              value={selectedPatientId}
+              onChange={(e) => setSelectedPatientId(Number(e.target.value))}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-slate-900 focus:outline-none"
+            >
+              {pacientesOdonto.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome} ({p.cpf})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <PatientHeader />
+        <PatientHeader paciente={pacienteSelecionado} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Coluna Esquerda: Alertas Clínicos & Sinais Vitais */}
           <div className="lg:col-span-3 space-y-6">
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
-                <span className="text-red-500">⚠️</span> Alertas Clínicos (Destaque Vermelho)
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
+                <span>Alertas Clínicos & Alergias</span>
               </h3>
               <ul className="space-y-2 text-xs">
-                <li className="p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 font-medium">
+                <li className="p-3 bg-red-50 text-red-800 rounded-xl border border-red-200 font-medium">
                   <strong>Alergia Medicamentosa:</strong> Penicilina e derivados.
                 </li>
-                <li className="p-3 bg-amber-50 text-amber-800 rounded-lg border border-amber-200 font-medium">
+                <li className="p-3 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 font-medium">
                   <strong>Hipertensão Arterial:</strong> Controlada (Losartana 50mg).
                 </li>
               </ul>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
-                <span>❤️</span> Sinais Vitais da Sessão
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                <ShieldCheckIcon className="w-4 h-4 text-slate-600" />
+                <span>Sinais Vitais da Sessão</span>
               </h3>
-              <div className="space-y-2.5 text-xs text-gray-700">
-                <div className="flex justify-between border-b border-gray-100 pb-2">
-                  <span className="text-gray-500">Pressão Arterial (P.A.)</span>
-                  <span className="font-bold text-gray-900">120/80 mmHg</span>
+              <div className="space-y-2.5 text-xs text-slate-700">
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500">Pressão Arterial (P.A.)</span>
+                  <span className="font-bold text-slate-900 font-mono">120/80 mmHg</span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2">
-                  <span className="text-gray-500">Glicemia Capilar</span>
-                  <span className="font-bold text-gray-900">98 mg/dL</span>
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500">Glicemia Capilar</span>
+                  <span className="font-bold text-slate-900 font-mono">98 mg/dL</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Frequência Cardíaca</span>
-                  <span className="font-bold text-gray-900">74 bpm</span>
+                  <span className="text-slate-500">Frequência Cardíaca</span>
+                  <span className="font-bold text-slate-900 font-mono">74 bpm</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl text-xs text-blue-900 space-y-1">
-              <p className="font-bold">Regra Institucional CFO:</p>
-              <p className="text-[11px] leading-relaxed">
+            <div className="bg-slate-100 border border-slate-200 p-4 rounded-2xl text-xs text-slate-800 space-y-1">
+              <p className="font-bold text-slate-900">Diretriz Regulamentar CFO:</p>
+              <p className="text-[11px] leading-relaxed text-slate-600">
                 Atendimento clínico em cadeira deve ser conduzido obrigatoriamente por dupla (Operador e Auxiliar) sob supervisão de docente alocado.
               </p>
             </div>
@@ -80,46 +120,45 @@ export function DentalRecordPage() {
           {/* Área Principal (Abas e Conteúdo) */}
           <div className="lg:col-span-9">
             {/* Menu de Abas */}
-            <div className="bg-white px-4 pt-1 rounded-xl border border-gray-200 shadow-sm mb-6 flex overflow-x-auto">
+            <div className="bg-white px-4 pt-1 rounded-2xl border border-slate-200/80 shadow-xs mb-6 flex overflow-x-auto">
               <button
                 onClick={() => setActiveTab('anamnese')}
                 className={getTabStyle('anamnese')}
               >
-                <span>🦷</span> Odontograma & Periodograma
+                <DocumentTextIcon className="w-4 h-4" />
+                <span>Odontograma 2D & Periodograma</span>
               </button>
               <button
                 onClick={() => setActiveTab('evolucao')}
                 className={getTabStyle('evolucao')}
               >
-                <span>📝</span> Evolução Clínica Diária
+                <DocumentTextIcon className="w-4 h-4" />
+                <span>Evolução Clínica Diária</span>
               </button>
               <button
                 onClick={() => setActiveTab('tratamento')}
                 className={getTabStyle('tratamento')}
               >
-                <span>📋</span> Plano de Tratamento
+                <ClipboardDocumentCheckIcon className="w-4 h-4" />
+                <span>Plano de Tratamento</span>
               </button>
             </div>
 
             {/* Conteúdo Renderizado Condicionalmente */}
             {activeTab === 'anamnese' && (
               <div className="space-y-6">
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                   <OdontogramApp />
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                   <Periodograma />
                 </div>
               </div>
             )}
 
-            {activeTab === 'evolucao' && (
-              <DentalEvolutionTab />
-            )}
+            {activeTab === 'evolucao' && <DentalEvolutionTab />}
 
-            {activeTab === 'tratamento' && (
-              <TreatmentPlanTab />
-            )}
+            {activeTab === 'tratamento' && <TreatmentPlanTab />}
           </div>
         </div>
       </main>
