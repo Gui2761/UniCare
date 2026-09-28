@@ -2,84 +2,89 @@ import { ProfileSelector } from './ProfileSelector';
 import { PersonalInfoFields } from './PersonalInfoFields';
 import { CredentialsFields } from './CredentialsFields';
 import { TermsCheckboxes } from './TermsCheckboxes';
+import {
+  BuildingOfficeIcon,
+  UserGroupIcon,
+  LockClosedIcon,
+  ShieldCheckIcon,
+} from '../../../components/icons/CorporateIcons';
 
 export function RegisterForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // A lógica de submissão será colocada aqui no futuro
+    alert('Solicitação de credenciamento enviada para validação da Diretoria Técnica!');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 font-sans">
-      <form 
-        onSubmit={handleSubmit} 
-        className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-xl shadow-sm border border-gray-200"
-      >
-        {/* Cabeçalho */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-              Cadastro e Habilitação Clínica
-            </h1>
-            <p className="text-sm text-gray-500 mt-2">
-              Preencha os dados institucionais para solicitar acesso ao prontuário eletrônico — Unidade Aracaju (2026.2).
-            </p>
-          </div>
-          <div className="hidden md:flex flex-col items-end text-xs text-gray-400 mt-4 md:mt-0">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-blue-600 rounded-full"></span> Etapa Única • Credenciamento
-            </span>
-            <span className="flex items-center gap-1 mt-1">🔒 Ambiente Seguro • Clínica-Escola</span>
-          </div>
-        </div>
+    <div className="w-full max-w-4xl bg-white p-8 sm:p-12 rounded-2xl shadow-xl border border-slate-200 font-sans">
+      <div className="mb-8">
+        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-md uppercase tracking-wider">
+          Credenciamento Acadêmico & Profissional
+        </span>
+        <h1 className="text-2xl font-bold text-slate-900 mt-2 tracking-tight">Cadastro Institucional UniCare</h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Preencha os dados abaixo para solicitar acesso ao sistema hospitalar sob conformidade ética e LGPD.
+        </p>
+      </div>
 
-        <div className="space-y-12">
-          {/* Etapa 1: Perfil */}
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-10">
+          {/* Etapa 1: Perfil de Acesso */}
           <section>
-            <div className="flex justify-between items-end mb-4">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <span className="text-blue-600 text-xl">🏥</span> 1. Perfil Institucional
+            <div className="flex justify-between items-center mb-6 pb-2 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                <BuildingOfficeIcon className="w-4 h-4 text-blue-700" />
+                <span>1. Perfil Institucional</span>
               </h2>
-              <span className="text-xs text-gray-400">Selecione sua função</span>
+              <span className="text-xs text-slate-400">Selecione sua função</span>
             </div>
             <ProfileSelector />
           </section>
 
           {/* Etapa 2: Dados Pessoais */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-6">
-              <span className="text-blue-600 text-xl">👤</span> 2. Dados Pessoais e Vínculo
-            </h2>
+            <div className="flex justify-between items-center mb-6 pb-2 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                <UserGroupIcon className="w-4 h-4 text-blue-700" />
+                <span>2. Dados Pessoais e Vínculo Acadêmico</span>
+              </h2>
+            </div>
             <PersonalInfoFields />
           </section>
 
           {/* Etapa 3: Senhas */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-6">
-              <span className="text-blue-600 text-xl">🔒</span> 3. Credenciais de Acesso
-            </h2>
+            <div className="flex justify-between items-center mb-6 pb-2 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                <LockClosedIcon className="w-4 h-4 text-blue-700" />
+                <span>3. Credenciais de Acesso Seguro</span>
+              </h2>
+            </div>
             <CredentialsFields />
           </section>
 
           {/* Etapa 4: Termos e LGPD */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-6">
-              <span className="text-blue-600 text-xl">🛡️</span> 4. Termos e Governança Clínica
-            </h2>
+            <div className="flex justify-between items-center mb-6 pb-2 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                <ShieldCheckIcon className="w-4 h-4 text-blue-700" />
+                <span>4. Termos e Governança Clínica (LGPD Art. 11)</span>
+              </h2>
+            </div>
             <TermsCheckboxes />
           </section>
         </div>
 
         {/* Rodapé e Botões */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-12 pt-6 border-t border-gray-100 gap-4">
-          <a href="/login" className="text-sm text-blue-600 font-medium hover:text-blue-800 transition-colors flex items-center gap-1">
-            &larr; Já tenho cadastro
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-10 pt-6 border-t border-slate-100 gap-4">
+          <a href="/login" className="text-xs text-blue-700 font-semibold hover:underline flex items-center gap-1">
+            ← Já possuo cadastro institucional
           </a>
           <button 
             type="submit" 
-            className="w-full sm:w-auto bg-[#0056b3] hover:bg-blue-800 text-white px-8 py-3 rounded-md font-medium transition-all shadow-sm"
+            className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-xl text-xs font-bold transition-all shadow-xs"
           >
-            Solicitar Cadastro
+            Submeter Solicitação de Cadastro
           </button>
         </div>
       </form>

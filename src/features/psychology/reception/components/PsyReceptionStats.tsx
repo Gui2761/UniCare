@@ -1,49 +1,55 @@
+import {
+  CalendarIcon,
+  ClockIcon,
+  UserGroupIcon,
+  XMarkIcon,
+} from '../../../../components/icons/CorporateIcons';
+
 export function PsyReceptionStats() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between">
-        <div className="flex justify-between items-start mb-2">
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Agendados Hoje</p>
-          <span className="text-blue-400">📅</span>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex justify-between items-start">
+        <div>
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Agendados Hoje</p>
+          <h3 className="text-3xl font-bold text-slate-900 font-mono">28</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Sessões individuais SPA</p>
         </div>
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-4xl font-bold text-gray-900">28</h3>
-          <span className="text-xs text-gray-500 font-medium">atendimentos</span>
-        </div>
+        <span className="p-2.5 bg-slate-100 text-slate-700 rounded-xl">
+          <CalendarIcon className="w-4 h-4" />
+        </span>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-blue-100 shadow-sm flex flex-col justify-between">
-        <div className="flex justify-between items-start mb-2">
-          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Sala de Espera / Recepção</p>
-          <span className="text-blue-500">🛋️</span>
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex justify-between items-start">
+        <div>
+          <p className="text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-2">Sala de Espera SPA</p>
+          <h3 className="text-3xl font-bold text-blue-700 font-mono">04</h3>
+          <p className="text-[10px] text-blue-700 font-medium mt-1">Pacientes no hall de acolhimento</p>
         </div>
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-4xl font-bold text-blue-600">04</h3>
-          <span className="text-xs text-blue-500 font-medium">pacientes no hall</span>
-        </div>
+        <span className="p-2.5 bg-blue-50 text-blue-700 rounded-xl">
+          <ClockIcon className="w-4 h-4" />
+        </span>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-green-100 shadow-sm flex flex-col justify-between">
-        <div className="flex justify-between items-start mb-2">
-          <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Em Andamento</p>
-          <span className="text-green-500">🗣️</span>
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex justify-between items-start">
+        <div>
+          <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider mb-2">Em Psicoterapia</p>
+          <h3 className="text-3xl font-bold text-slate-900 font-mono">07</h3>
+          <p className="text-[10px] text-emerald-800 font-medium mt-1">7 de 10 consultórios em uso</p>
         </div>
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-4xl font-bold text-gray-900">07</h3>
-          <span className="text-xs text-gray-500 font-medium">consultórios</span>
-        </div>
-        <p className="text-[10px] text-gray-400 mt-1">7 de 10 ativos</p>
+        <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl">
+          <UserGroupIcon className="w-4 h-4" />
+        </span>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-orange-100 shadow-sm flex flex-col justify-between">
-        <div className="flex justify-between items-start mb-2">
-          <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Desmarcações do Dia</p>
-          <span className="text-orange-500">❌</span>
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex justify-between items-start">
+        <div>
+          <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-2">Desmarcações do Dia</p>
+          <h3 className="text-3xl font-bold text-amber-700 font-mono">02</h3>
+          <p className="text-[10px] text-amber-800 font-medium mt-1">Vagas remanejadas</p>
         </div>
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-4xl font-bold text-orange-600">02</h3>
-          <span className="text-xs text-orange-500 font-medium">horários vagos</span>
-        </div>
+        <span className="p-2.5 bg-amber-50 text-amber-700 rounded-xl">
+          <XMarkIcon className="w-4 h-4" />
+        </span>
       </div>
     </div>
   );

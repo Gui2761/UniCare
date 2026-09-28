@@ -1,76 +1,70 @@
 import { useState } from 'react';
 import { useClinic } from '../../clinic/context/ClinicContext';
-import type { StatusAgendamento } from '../../clinic/context/ClinicContext';
+import {
+  LockClosedIcon,
+  MagnifyingGlassIcon,
+  CheckIcon,
+} from '../../../components/icons/CorporateIcons';
 
-interface AppointmentTableProps {
-  cursoFiltro?: 'psicologia' | 'odontologia';
-}
-
-export function AppointmentTable({ cursoFiltro }: AppointmentTableProps) {
+export function AppointmentTable() {
   const { agendamentos, atualizarStatusAgendamento } = useClinic();
-
-  const [busca, setBusca] = useState('');
   const [statusFiltro, setStatusFiltro] = useState<string>('TODOS');
+  const [busca, setBusca] = useState<string>('');
 
-  const itensFiltrados = agendamentos.filter((a) => {
-    if (cursoFiltro && a.curso !== cursoFiltro) return false;
-    if (statusFiltro !== 'TODOS' && a.status !== statusFiltro) return false;
-    if (busca.trim()) {
-      const termo = busca.toLowerCase();
-      return (
-        a.pacienteNome.toLowerCase().includes(termo) ||
-        a.estagiarioNome.toLowerCase().includes(termo) ||
-        a.salaOuCadeira.toLowerCase().includes(termo)
-      );
-    }
-    return true;
+  const itensFiltrados = agendamentos.filter((item) => {
+    const matchStatus = statusFiltro === 'TODOS' || item.status === statusFiltro;
+    const matchBusca =
+      item.pacienteNome.toLowerCase().includes(busca.toLowerCase()) ||
+      item.estagiarioNome.toLowerCase().includes(busca.toLowerCase()) ||
+      item.salaOuCadeira.toLowerCase().includes(busca.toLowerCase());
+    return matchStatus && matchBusca;
   });
 
-  const getStatusBadge = (status: StatusAgendamento) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'AGENDADO':
-        return <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-bold">Agendado</span>;
+        return <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md text-[10px] font-bold border border-slate-200">Agendado</span>;
       case 'PRESENTE':
-        return <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Presente</span>;
+        return <span className="bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-md text-[10px] font-bold border border-amber-200">Na Recepção</span>;
       case 'EM_ATENDIMENTO':
-        return <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping"></span> Em Atendimento</span>;
+        return <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-md text-[10px] font-bold border border-blue-200">Em Atendimento</span>;
       case 'CONCLUIDO':
-        return <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[11px] font-bold">Concluído</span>;
+        return <span className="bg-emerald-50 text-emerald-800 px-2.5 py-0.5 rounded-md text-[10px] font-bold border border-emerald-200">Atendido</span>;
       case 'FALTOU':
-        return <span className="bg-rose-100 text-rose-800 px-2 py-0.5 rounded text-[11px] font-bold">Faltou</span>;
+        return <span className="bg-red-50 text-red-700 px-2.5 py-0.5 rounded-md text-[10px] font-bold border border-red-200">Faltou</span>;
       case 'CANCELADO':
-        return <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[11px] font-bold">Cancelado</span>;
+        return <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md text-[10px] font-bold border border-slate-200">Cancelado</span>;
       default:
         return null;
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden font-sans">
+    <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden font-sans">
       {/* Alerta de Conformidade RN-001 (Visão Exclusivamente Logística da Recepção) */}
-      <div className="bg-slate-900 text-slate-300 px-6 py-2.5 flex items-center justify-between text-xs">
+      <div className="bg-slate-900 text-slate-300 px-6 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-amber-400">🔒</span>
+          <LockClosedIcon className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <strong>Controle Logístico Estrito (RN-001 / CFP nº 06/2019):</strong> Recepção sem acesso ao histórico ou dados clínicos.
+            <strong className="text-white">Salvaguarda RN-001 / Resolução CFP 06/2019:</strong> Perfil de recepção restrito a agendamento e acolhimento presencial.
           </span>
         </div>
-        <span className="text-[10px] bg-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded">
+        <span className="text-[10px] bg-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded-md">
           {itensFiltrados.length} registros ativos
         </span>
       </div>
 
       {/* Barra de Filtros e Busca */}
-      <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
         <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
           {['TODOS', 'AGENDADO', 'PRESENTE', 'EM_ATENDIMENTO', 'CONCLUIDO', 'FALTOU'].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFiltro(st)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-xl transition-all ${
                 statusFiltro === st
-                  ? 'bg-[#0a1526] text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
               }`}
             >
               {st === 'TODOS' ? 'Todos os Status' : st.replace('_', ' ')}
@@ -79,13 +73,13 @@ export function AppointmentTable({ cursoFiltro }: AppointmentTableProps) {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <span className="absolute left-3 top-2.5 text-gray-400 text-xs">🔍</span>
+          <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por paciente, aluno ou sala..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 text-xs bg-gray-50 focus:bg-white outline-none"
+            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white focus:border-slate-900 outline-none"
           />
         </div>
       </div>
@@ -93,44 +87,44 @@ export function AppointmentTable({ cursoFiltro }: AppointmentTableProps) {
       {/* Tabela de Atendimentos */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#f8fafc] text-gray-500 uppercase font-bold border-b border-gray-200 text-[10px] tracking-wider">
+          <thead className="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200 text-[10px] tracking-wider">
             <tr>
               <th className="py-3 px-4">Horário / Turno</th>
               <th className="py-3 px-4">Paciente</th>
               <th className="py-3 px-4">Local / Especialidade</th>
               <th className="py-3 px-4">Estagiário Responsável</th>
               <th className="py-3 px-4">Status Presença</th>
-              <th className="py-3 px-4 text-right">Ações da Recepção</th>
+              <th className="py-3 px-4 text-right">Ações de Recepção</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-slate-100">
             {itensFiltrados.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-gray-400">
+                <td colSpan={6} className="py-12 text-center text-slate-400">
                   Nenhum agendamento encontrado para os filtros selecionados.
                 </td>
               </tr>
             ) : (
               itensFiltrados.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <p className="font-bold text-gray-900 text-sm">{item.horario}</p>
-                    <p className="text-[10px] text-gray-500 capitalize">Turno: {item.turno}</p>
+                  <td className="py-3.5 px-4 font-mono">
+                    <p className="font-bold text-slate-900 text-sm">{item.horario}</p>
+                    <p className="text-[10px] text-slate-400 capitalize">Turno: {item.turno}</p>
                   </td>
 
                   <td className="py-3.5 px-4">
-                    <p className="font-bold text-gray-900">{item.pacienteNome}</p>
-                    <p className="text-[10px] text-gray-500 italic">{item.observacaoLogistica}</p>
+                    <p className="font-bold text-slate-900">{item.pacienteNome}</p>
+                    <p className="text-[10px] text-slate-500 italic">{item.observacaoLogistica}</p>
                   </td>
 
                   <td className="py-3.5 px-4">
-                    <p className="font-semibold text-gray-800">{item.salaOuCadeira}</p>
-                    <p className="text-[10px] text-blue-600 font-medium capitalize">{item.tipoConsulta}</p>
+                    <p className="font-semibold text-slate-800">{item.salaOuCadeira}</p>
+                    <p className="text-[10px] text-blue-700 font-medium capitalize">{item.tipoConsulta}</p>
                   </td>
 
                   <td className="py-3.5 px-4">
-                    <p className="font-semibold text-gray-800">{item.estagiarioNome}</p>
-                    <p className="text-[10px] text-gray-400">Matrícula: {item.estagiarioMatricula}</p>
+                    <p className="font-semibold text-slate-800">{item.estagiarioNome}</p>
+                    <p className="text-[10px] text-slate-400 font-mono">Matrícula: {item.estagiarioMatricula}</p>
                   </td>
 
                   <td className="py-3.5 px-4">
@@ -141,38 +135,43 @@ export function AppointmentTable({ cursoFiltro }: AppointmentTableProps) {
                     <div className="flex justify-end gap-1.5">
                       {item.status === 'AGENDADO' && (
                         <button
+                          type="button"
                           onClick={() => atualizarStatusAgendamento(item.id, 'PRESENTE')}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded text-[11px] transition-colors shadow-sm"
-                          title="Marcar que o paciente chegou à recepção"
+                          className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition-colors shadow-2xs flex items-center gap-1"
+                          title="Confirmar presença do paciente"
                         >
-                          ✓ Dar Presença
+                          <CheckIcon className="w-3.5 h-3.5" />
+                          <span>Dar Presença</span>
                         </button>
                       )}
 
                       {item.status === 'PRESENTE' && (
                         <button
+                          type="button"
                           onClick={() => atualizarStatusAgendamento(item.id, 'EM_ATENDIMENTO')}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 rounded text-[11px] transition-colors shadow-sm"
-                          title="Paciente encaminhado para a sala/cadeira"
+                          className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition-colors shadow-2xs flex items-center gap-1"
+                          title="Encaminhar para atendimento no box/sala"
                         >
-                          ▶ Iniciar
+                          <span>Iniciar Atendimento</span>
                         </button>
                       )}
 
                       {item.status === 'EM_ATENDIMENTO' && (
                         <button
+                          type="button"
                           onClick={() => atualizarStatusAgendamento(item.id, 'CONCLUIDO')}
-                          className="bg-slate-700 hover:bg-slate-900 text-white font-bold px-2.5 py-1 rounded text-[11px] transition-colors shadow-sm"
+                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition-colors shadow-2xs"
                         >
                           Concluir
                         </button>
                       )}
 
-                      {item.status === 'AGENDADO' && (
+                      {(item.status === 'AGENDADO' || item.status === 'PRESENTE') && (
                         <button
+                          type="button"
                           onClick={() => atualizarStatusAgendamento(item.id, 'FALTOU')}
-                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2 py-1 rounded text-[11px] border border-rose-200 transition-colors"
-                          title="Registrar ausência do paciente"
+                          className="text-red-700 hover:bg-red-50 border border-red-200 font-semibold px-2 py-1.5 rounded-lg text-[11px] transition-colors"
+                          title="Registrar falta para indicador de absenteísmo"
                         >
                           Falta
                         </button>

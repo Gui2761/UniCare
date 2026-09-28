@@ -1,35 +1,48 @@
 import { useState } from 'react';
 import { useClinic } from '../../clinic/context/ClinicContext';
+import {
+  XMarkIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+} from '../../../components/icons/CorporateIcons';
 
 interface NewPatientModalProps {
-  isOpen: boolean;
   onClose: () => void;
-  defaultCourse?: 'psicologia' | 'odontologia' | 'ambos';
+  defaultCurso?: 'psicologia' | 'odontologia' | 'ambos';
 }
 
-export function NewPatientModal({ isOpen, onClose, defaultCourse = 'odontologia' }: NewPatientModalProps) {
-  const { cadastrarPaciente } = useClinic();
+export function NewPatientModal({ onClose, defaultCurso = 'odontologia' }: NewPatientModalProps) {
+  const { pacientes, cadastrarPaciente } = useClinic();
 
   const [nome, setNome] = useState('');
   const [cpf, setCpf] = useState('');
-  const [dataNascimento, setDataNascimento] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [curso, setCurso] = useState<'psicologia' | 'odontologia' | 'ambos'>(defaultCourse);
+  const [dataNascimento, setDataNascimento] = useState('1998-04-12');
+  const [telefone, setTelefone] = useState('(79) 99882-1200');
+  const [curso, setCurso] = useState<'psicologia' | 'odontologia' | 'ambos'>(defaultCurso);
   const [ehMenor, setEhMenor] = useState(false);
   const [nomeResponsavel, setNomeResponsavel] = useState('');
   const [contatoResponsavel, setContatoResponsavel] = useState('');
+
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-
-  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    setSuccessMsg('');
 
-    if (!nome.trim() || !cpf.trim() || !dataNascimento || !telefone.trim()) {
-      setErrorMsg('Por favor, preencha todos os campos obrigatórios.');
+    // Validação Anti-Duplicidade de CPF
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    const duplicado = pacientes.some(
+      (p) => p.cpf.replace(/\D/g, '') === cpfLimpo
+    );
+
+    if (duplicado) {
+      setErrorMsg('Já existe um paciente cadastrado com este número de CPF na base unificada.');
+      return;
+    }
+
+    if (ehMenor && !nomeResponsavel.trim()) {
+      setErrorMsg('Para pacientes menores de idade, o nome do responsável legal é obrigatório.');
       return;
     }
 
@@ -44,173 +57,165 @@ export function NewPatientModal({ isOpen, onClose, defaultCourse = 'odontologia'
       contatoResponsavel: ehMenor ? contatoResponsavel : undefined,
     });
 
-    if (!res.success) {
-      setErrorMsg(res.message);
-    } else {
-      setSuccessMsg(res.message);
+    if (res.success) {
+      setSuccessMsg('Paciente cadastrado com sucesso na base compartilhada!');
       setTimeout(() => {
         onClose();
-        setNome('');
-        setCpf('');
-        setDataNascimento('');
-        setTelefone('');
-        setEhMenor(false);
-        setNomeResponsavel('');
-        setContatoResponsavel('');
         setSuccessMsg('');
-      }, 1200);
+      }, 1000);
+    } else {
+      setErrorMsg(res.message);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 font-sans">
-      <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 font-sans">
+      <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
           <div>
-            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
               Triagem de Recepção • UC-03
             </span>
-            <h2 className="text-xl font-bold text-gray-900 mt-1">Novo Cadastro de Paciente</h2>
+            <h2 className="text-lg font-bold text-slate-900 mt-1">Novo Cadastro de Paciente</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-bold text-lg">
-            ✕
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg"
+          >
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {errorMsg && (
-          <div className="p-3 mb-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
-            ⚠️ {errorMsg}
+          <div className="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold flex items-center gap-2">
+            <ExclamationTriangleIcon className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 mb-4 rounded-lg bg-green-50 border border-green-200 text-xs text-green-700 font-semibold">
-            ✓ {successMsg}
+          <div className="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+            <CheckCircleIcon className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{successMsg}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Nome Completo *</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Nome Completo *</label>
             <input
               type="text"
               required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Maria das Graças Oliveira"
-              className="w-full text-xs p-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none"
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">CPF (Verificação Anti-Duplicidade) *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">CPF (Anti-Duplicidade) *</label>
               <input
                 type="text"
                 required
                 value={cpf}
                 onChange={(e) => setCpf(e.target.value)}
                 placeholder="000.000.000-00"
-                className="w-full text-xs p-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none"
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Data de Nascimento *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Data de Nascimento *</label>
               <input
                 type="date"
                 required
                 value={dataNascimento}
                 onChange={(e) => setDataNascimento(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none"
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none font-mono"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Telefone / WhatsApp *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Telefone / WhatsApp *</label>
               <input
                 type="text"
                 required
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
-                placeholder="(79) 90000-0000"
-                className="w-full text-xs p-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none"
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Especialidade / Destino *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Serviço de Destino *</label>
               <select
                 value={curso}
                 onChange={(e) => setCurso(e.target.value as 'psicologia' | 'odontologia' | 'ambos')}
-                className="w-full text-xs p-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none"
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none"
               >
-                <option value="odontologia">Odontologia Clínica</option>
+                <option value="odontologia">Odontologia</option>
                 <option value="psicologia">Psicologia (SPA)</option>
-                <option value="ambos">Ambas Especialidades</option>
+                <option value="ambos">Clínicas Integradas (Ambos)</option>
               </select>
             </div>
           </div>
 
-          {/* Validação de Menor de Idade (RN-004 e UC-03) */}
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={ehMenor}
                 onChange={(e) => setEhMenor(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-xs font-bold text-gray-700">
-                Paciente Menor de Idade (Exige Responsável Legal - RN-004)
+              <span className="text-xs font-semibold text-slate-800">
+                Paciente Menor de Idade (requer dados do Responsável Legal)
               </span>
             </label>
 
             {ehMenor && (
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                    Nome do Responsável Legal *
-                  </label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nome do Responsável *</label>
                   <input
                     type="text"
-                    required={ehMenor}
+                    required
                     value={nomeResponsavel}
                     onChange={(e) => setNomeResponsavel(e.target.value)}
-                    placeholder="Mãe, pai ou tutor"
-                    className="w-full text-xs p-2 rounded-lg border border-gray-200 bg-white outline-none"
+                    placeholder="Nome completo do pai, mãe ou tutor"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                    Contato do Responsável *
-                  </label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Contato do Responsável</label>
                   <input
                     type="text"
-                    required={ehMenor}
                     value={contatoResponsavel}
                     onChange={(e) => setContatoResponsavel(e.target.value)}
-                    placeholder="(79) 90000-0000"
-                    className="w-full text-xs p-2 rounded-lg border border-gray-200 bg-white outline-none"
+                    placeholder="(79) 99999-9999"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white outline-none font-mono"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <div className="pt-3 border-t border-slate-100 flex justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+              className="px-4 py-2 text-xs font-semibold border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-[#0a1526] hover:bg-black text-white text-xs font-bold shadow"
+              className="px-5 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs"
             >
-              Salvar Cadastro
+              Cadastrar Paciente
             </button>
           </div>
         </form>

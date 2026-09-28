@@ -4,6 +4,11 @@ from app.main import app
 
 client = TestClient(app)
 
+@pytest.fixture(scope="session", autouse=True)
+def initialize_database():
+    with TestClient(app):
+        yield
+
 def get_auth_token(email_ou_matricula: str, senha: str = "unicare123") -> str:
     response = client.post(
         "/api/v1/auth/login",

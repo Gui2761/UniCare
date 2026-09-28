@@ -9,13 +9,14 @@ import {
   ArrowRightOnRectangleIcon,
   BuildingOfficeIcon,
   UserGroupIcon,
+  LockClosedIcon,
 } from '../icons/CorporateIcons';
 
 export function AppSidebar() {
   const { user, logout, switchUser } = useAuth();
   const navigate = useNavigate();
 
-  // Para o perfil de RT Master: seletor de visão de curso
+  // Para o perfil de RT Master: seletor de visão
   const [rtCourseView, setRtCourseView] = useState<'psicologia' | 'odontologia' | 'global'>('global');
 
   const handleLogout = () => {
@@ -25,7 +26,6 @@ export function AppSidebar() {
 
   const handleSwitchUserAndNavigate = async (presetKey: string) => {
     await switchUser(presetKey);
-    // Redirecionamento instantâneo para a tela nativa do perfil/curso selecionado
     if (presetKey === 'estagiario_psico') {
       navigate('/psi/prontuario');
     } else if (presetKey === 'supervisor_psico') {
@@ -42,10 +42,10 @@ export function AppSidebar() {
   };
 
   const getLinkStyle = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+    `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
       isActive
         ? 'bg-slate-900 text-white shadow-xs'
-        : 'text-slate-600 hover:bg-slate-100/90 hover:text-slate-900'
+        : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
     }`;
 
   const isPsicoUser = user?.curso === 'psicologia' && user?.perfil !== 'rt' && user?.perfil !== 'recepcao';
@@ -54,10 +54,10 @@ export function AppSidebar() {
   const isRT = user?.perfil === 'rt';
 
   return (
-    <aside className="w-64 bg-slate-50/70 backdrop-blur-md border-r border-slate-200/80 flex flex-col h-screen fixed left-0 top-0 justify-between select-none z-30">
+    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 justify-between select-none z-30 shadow-2xs">
       <div>
         {/* Cabeçalho da Marca & Curso */}
-        <div className="p-4 border-b border-slate-200/60 bg-white/70">
+        <div className="p-4 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-3">
             <div
               className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-xs ${
@@ -83,7 +83,7 @@ export function AppSidebar() {
                   : 'UniCare Recepção'}
               </h1>
               <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 truncate">
-                UNINASSAU Saúde
+                Hospital UNINASSAU
               </p>
             </div>
           </div>
@@ -107,19 +107,19 @@ export function AppSidebar() {
             )}
             {isRT && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
-                Gestão Geral Hospitalar (RT)
+                Diretoria Técnica & Compliance
               </span>
             )}
           </div>
         </div>
 
-        {/* MÓDULO EXCLUSIVO DA RT MASTER: Seletor de Visão */}
+        {/* MÓDULO EXCLUSIVO DA RT MASTER: Seletor de Visão de Curso */}
         {isRT && (
           <div className="px-3 pt-3">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5">
-              Alternar Módulo Clínico:
+              Filtrar Módulo Clínico:
             </p>
-            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-200/60 rounded-xl text-[10px] font-bold">
+            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-xl text-[10px] font-bold">
               <button
                 type="button"
                 onClick={() => setRtCourseView('global')}
@@ -151,9 +151,9 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* NAVEGAÇÃO ESTRITA POR CURSO */}
+        {/* NAVEGAÇÃO ESTRITAMENTE SEGREGADA */}
         <nav className="px-3 py-3 space-y-4">
-          {/* 1. SE O USUÁRIO FOR DE PSICOLOGIA (OU RT NA VISÃO PSICO/GLOBAL) */}
+          {/* 1. SE FOR PSICOLOGIA (OU RT NA VISÃO PSICO/GLOBAL) */}
           {(isPsicoUser || (isRT && (rtCourseView === 'psicologia' || rtCourseView === 'global'))) && (
             <div>
               <h2 className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
@@ -184,7 +184,7 @@ export function AppSidebar() {
             </div>
           )}
 
-          {/* 2. SE O USUÁRIO FOR DE ODONTOLOGIA (OU RT NA VISÃO ODONTO/GLOBAL) */}
+          {/* 2. SE FOR ODONTOLOGIA (OU RT NA VISÃO ODONTO/GLOBAL) */}
           {(isOdontoUser || (isRT && (rtCourseView === 'odontologia' || rtCourseView === 'global'))) && (
             <div>
               <h2 className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
@@ -215,7 +215,7 @@ export function AppSidebar() {
             </div>
           )}
 
-          {/* 3. SE O USUÁRIO FOR DA RECEPÇÃO */}
+          {/* 3. SE FOR RECEPÇÃO */}
           {isRecepcao && (
             <div>
               <h2 className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
@@ -235,10 +235,13 @@ export function AppSidebar() {
                   </NavLink>
                 </li>
               </ul>
-              <div className="mt-4 px-2 py-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-[11px] text-amber-800">
-                <p className="font-bold">Salvaguarda RN-001 Ativa:</p>
-                <p className="text-[10px] mt-0.5 text-amber-700 leading-relaxed">
-                  Acesso aos prontuários clínicos estritamente bloqueado. Apenas agendamento e logística permitidos.
+              <div className="mt-4 p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold">
+                  <LockClosedIcon className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Salvaguarda RN-001 Ativa</span>
+                </div>
+                <p className="text-[10px] text-amber-800 leading-relaxed">
+                  Acesso aos prontuários clínicos estritamente vedado para a equipe de recepção.
                 </p>
               </div>
             </div>
@@ -246,7 +249,7 @@ export function AppSidebar() {
 
           {/* 4. SE FOR SUPERVISOR OU RT: LINK DE INDICADORES E CUSTÓDIA */}
           {(user?.perfil === 'supervisor' || isRT) && (
-            <div className="pt-2 border-t border-slate-200/60">
+            <div className="pt-2 border-t border-slate-100">
               <h2 className="px-2 text-[10px] font-bold text-indigo-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <BuildingOfficeIcon className="w-3.5 h-3.5" />
                 <span>Controladoria & Gestão</span>
@@ -264,8 +267,8 @@ export function AppSidebar() {
         </nav>
       </div>
 
-      {/* RODAPÉ DO SIDEBAR: Perfil do Usuário e Simulador Corporativo */}
-      <div className="p-3 border-t border-slate-200/70 bg-white/80">
+      {/* RODAPÉ DO SIDEBAR: Perfil do Usuário e Simulador Rápido */}
+      <div className="p-3 border-t border-slate-200 bg-slate-50/60">
         <div className="flex items-center justify-between gap-2">
           <div className="overflow-hidden">
             <p className="text-xs font-bold text-slate-900 truncate leading-snug">{user?.nome || 'Usuário'}</p>
@@ -275,23 +278,23 @@ export function AppSidebar() {
           </div>
 
           <div className="flex items-center gap-1">
-            {/* Simulador de Perfil em Popover Elegante */}
+            {/* Popover Simulação de Perfil */}
             <div className="relative group">
               <button
                 type="button"
-                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200/70"
-                title="Alternar Perfil / Curso"
+                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-slate-200/80 shadow-2xs"
+                title="Alternar Perfil Institucional"
               >
                 <UserGroupIcon className="w-3.5 h-3.5" />
               </button>
 
-              <div className="hidden group-hover:block absolute right-0 bottom-full mb-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 w-64 z-50 text-xs">
+              <div className="hidden group-hover:block absolute right-0 bottom-full mb-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2.5 w-64 z-50 text-xs">
                 <p className="font-bold text-slate-400 px-2 py-1 mb-1 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                   Simular Perfil Corporativo:
                 </p>
 
                 <div className="space-y-0.5">
-                  <p className="text-[9px] font-bold text-blue-700 uppercase px-2 pt-1">Módulo Psicologia:</p>
+                  <p className="text-[9px] font-bold text-blue-700 uppercase px-2 pt-1">Psicologia Clínica:</p>
                   <button
                     onClick={() => handleSwitchUserAndNavigate('estagiario_psico')}
                     className="w-full text-left px-2 py-1.5 hover:bg-blue-50/70 rounded-lg text-slate-800 text-[11px] font-medium"
@@ -305,8 +308,8 @@ export function AppSidebar() {
                     Supervisor (Prof. Robert - Psico)
                   </button>
 
-                  <p className="text-[9px] font-bold text-emerald-700 uppercase px-2 pt-2 border-t border-slate-100">
-                    Módulo Odontologia:
+                  <p className="text-[9px] font-bold text-emerald-800 uppercase px-2 pt-2 border-t border-slate-100">
+                    Odontologia Integrada:
                   </p>
                   <button
                     onClick={() => handleSwitchUserAndNavigate('estagiario_odonto')}
@@ -322,7 +325,7 @@ export function AppSidebar() {
                   </button>
 
                   <p className="text-[9px] font-bold text-slate-500 uppercase px-2 pt-2 border-t border-slate-100">
-                    Módulos Institucionais:
+                    Gestão Geral & Atendimento:
                   </p>
                   <button
                     onClick={() => handleSwitchUserAndNavigate('recepcao')}
@@ -334,7 +337,7 @@ export function AppSidebar() {
                     onClick={() => handleSwitchUserAndNavigate('rt_master')}
                     className="w-full text-left px-2 py-1.5 hover:bg-indigo-50/70 rounded-lg text-indigo-900 text-[11px] font-bold"
                   >
-                    Referência Técnica Master (Dra. Camila)
+                    RT Master (Dra. Camila)
                   </button>
                 </div>
               </div>

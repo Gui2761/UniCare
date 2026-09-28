@@ -1,21 +1,33 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import {
+  DocumentTextIcon,
+  ShieldCheckIcon,
+  AcademicCapIcon,
+  UserGroupIcon,
+} from '../../../components/icons/CorporateIcons';
 
 type ProfileType = 'odontologia' | 'psicologia' | 'docente' | 'recepcao';
 
 export function ProfileSelector() {
   const [selected, setSelected] = useState<ProfileType | null>('odontologia');
 
-  const profiles = [
-    { id: 'odontologia', title: 'Odontologia', subtitle: 'Estagiário', icon: '🦷' },
-    { id: 'psicologia', title: 'Psicologia', subtitle: 'Estagiário', icon: '🧠' },
-    { id: 'docente', title: 'Docente', subtitle: 'Supervisor', icon: '👨‍🏫' },
-    { id: 'recepcao', title: 'Recepção', subtitle: 'Apoio', icon: '📋' },
-  ] as const;
+  const profiles: {
+    id: ProfileType;
+    title: string;
+    subtitle: string;
+    icon: (props: { className?: string }) => React.JSX.Element;
+  }[] = [
+    { id: 'odontologia', title: 'Odontologia', subtitle: 'Estagiário Clínico', icon: DocumentTextIcon },
+    { id: 'psicologia', title: 'Psicologia', subtitle: 'Estagiário SPA', icon: ShieldCheckIcon },
+    { id: 'docente', title: 'Docente', subtitle: 'Supervisor (CRP/CRO)', icon: AcademicCapIcon },
+    { id: 'recepcao', title: 'Recepção', subtitle: 'Acolhimento & Triagem', icon: UserGroupIcon },
+  ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-sans">
       {profiles.map((profile) => {
         const isSelected = selected === profile.id;
+        const IconComponent = profile.icon;
         
         return (
           <button
@@ -23,20 +35,20 @@ export function ProfileSelector() {
             type="button"
             onClick={() => setSelected(profile.id)}
             className={`
-              flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all duration-200
+              flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-150
               ${isSelected 
-                ? 'border-blue-100 bg-blue-50/50 text-blue-900 shadow-sm' 
-                : 'border-gray-100 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-200'
+                ? 'border-blue-600 bg-blue-50/60 text-slate-900 shadow-xs ring-1 ring-blue-600' 
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300'
               }
             `}
           >
-            <span className={`text-2xl mb-3 p-3 rounded-lg ${isSelected ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500'}`}>
-              {profile.icon}
-            </span>
-            <span className={`font-semibold text-sm ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
+            <div className={`p-3 rounded-xl mb-2.5 transition-colors ${isSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <IconComponent className="w-5 h-5" />
+            </div>
+            <span className="font-bold text-xs text-slate-900">
               {profile.title}
             </span>
-            <span className="text-xs text-gray-500 mt-1">
+            <span className="text-[10px] text-slate-500 mt-0.5">
               {profile.subtitle}
             </span>
           </button>
