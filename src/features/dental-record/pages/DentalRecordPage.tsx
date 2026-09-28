@@ -5,12 +5,14 @@ import OdontogramApp from '../components/OdontogramaViewer';
 import Periodograma from '../components/PeriodogramaViewer';
 import { DentalEvolutionTab } from '../components/DentalEvolutionTab';
 import { TreatmentPlanTab } from '../components/TreatmentPlanTab';
+import { DentalRadiologyTab } from '../components/DentalRadiologyTab';
 import { useClinic } from '../../clinic/context/ClinicContext';
 import {
   DocumentTextIcon,
   ClipboardDocumentCheckIcon,
   ExclamationTriangleIcon,
   ShieldCheckIcon,
+  PhotoIcon,
 } from '../../../components/icons/CorporateIcons';
 
 export function DentalRecordPage() {
@@ -25,7 +27,8 @@ export function DentalRecordPage() {
   const pacienteSelecionado =
     pacientesOdonto.find((p) => p.id === selectedPatientId) || pacientesOdonto[0];
 
-  const [activeTab, setActiveTab] = useState<'anamnese' | 'evolucao' | 'tratamento'>('anamnese');
+  const [activeTab, setActiveTab] = useState<'anamnese' | 'evolucao' | 'tratamento' | 'exames'>('anamnese');
+
 
   return (
     <AppLayout
@@ -91,6 +94,18 @@ export function DentalRecordPage() {
           >
             <ClipboardDocumentCheckIcon className="w-4 h-4" />
             <span>Plano de Tratamento</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('exames')}
+            className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'exames'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <PhotoIcon className="w-4 h-4" />
+            <span>Radiografias & Exames (RF02)</span>
           </button>
         </div>
 
@@ -158,7 +173,10 @@ export function DentalRecordPage() {
         {activeTab === 'evolucao' && <DentalEvolutionTab />}
 
         {activeTab === 'tratamento' && <TreatmentPlanTab />}
+
+        {activeTab === 'exames' && <DentalRadiologyTab />}
       </div>
     </AppLayout>
+
   );
 }

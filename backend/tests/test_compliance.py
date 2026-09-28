@@ -112,9 +112,11 @@ def test_rn004_menor_de_idade_obrigatoriedade_responsavel():
     assert "RN-004" in res.json()["detail"]
 
     # Menor com responsável legal -> Deve cadastrar com 201
+    import time
+    cpf_unico = f"999.{int(time.time()) % 900 + 100}.{int(time.time() * 10) % 900 + 100}-77"
     payload_valido = {
         "nome": "Criança Teste Com Responsavel",
-        "cpf_rg": "999.888.777-77",
+        "cpf_rg": cpf_unico,
         "data_nascimento": "2018-05-10",
         "telefone": "(79) 99999-8888",
         "eh_menor": True,
@@ -123,6 +125,7 @@ def test_rn004_menor_de_idade_obrigatoriedade_responsavel():
         "curso": "odontologia"
     }
     res_valido = client.post("/api/v1/pacientes", json=payload_valido, headers=headers)
+
     assert res_valido.status_code == 201
     assert res_valido.json()["nome_responsavel"] == "Ana Paula da Silva (Mãe)"
 
