@@ -33,7 +33,7 @@ export function AppLayout({
   badgeType = 'blue',
   actions,
 }: AppLayoutProps) {
-  const { user, logout, switchUser } = useAuth();
+  const { user, logout, switchUser, allUsers } = useAuth();
   const navigate = useNavigate();
 
   // Estados do Modal de Troca Rápida de Perfil com Autenticação por Senha
@@ -72,6 +72,11 @@ export function AppLayout({
     setSwitchSuccess(false);
   };
 
+  const currentUsers = allUsers || PRESET_USERS;
+  const targetUser: User | undefined = selectedPresetKey
+    ? (currentUsers[selectedPresetKey] || PRESET_USERS[selectedPresetKey])
+    : undefined;
+
   const handleConfirmSwitchWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPresetKey) return;
@@ -92,18 +97,20 @@ export function AppLayout({
       setIsAuthenticating(false);
       setShowSwitchModal(false);
 
-      if (selectedPresetKey === 'estagiario_psico') {
+      if (targetUser?.curso === 'psicologia' && targetUser?.perfil === 'estagiario') {
         navigate('/psi/prontuario');
-      } else if (selectedPresetKey === 'supervisor_psico') {
+      } else if (targetUser?.curso === 'psicologia' && targetUser?.perfil === 'supervisor') {
         navigate('/psi/supervisao');
-      } else if (selectedPresetKey === 'estagiario_odonto') {
+      } else if (targetUser?.curso === 'odontologia' && targetUser?.perfil === 'estagiario') {
         navigate('/ficha-odonto');
-      } else if (selectedPresetKey === 'supervisor_odonto') {
+      } else if (targetUser?.curso === 'odontologia' && targetUser?.perfil === 'supervisor') {
         navigate('/supervisao');
-      } else if (selectedPresetKey === 'recepcao') {
+      } else if (targetUser?.perfil === 'recepcao') {
         navigate('/recepcao');
-      } else if (selectedPresetKey === 'rt_master') {
+      } else if (targetUser?.perfil === 'rt') {
         navigate('/rt/relatorios');
+      } else {
+        navigate('/psi/prontuario');
       }
     }, 700);
   };
@@ -126,12 +133,35 @@ export function AppLayout({
     }
   };
 
-  const targetUser: User | undefined = selectedPresetKey
-    ? PRESET_USERS[selectedPresetKey]
-    : undefined;
+  // Cor de fundo dinâmica do sistema conforme o perfil e curso logado
+  const getLayoutAtmosphere = () => {
+    if (isPsico && !isRT) {
+      return 'bg-gradient-to-br from-blue-50/70 via-slate-50 to-indigo-50/40';
+    }
+    if (isOdonto && !isRT && user?.perfil !== 'recepcao') {
+      return 'bg-gradient-to-br from-rose-50/60 via-slate-50 to-pink-50/30';
+    }
+    if (user?.perfil === 'recepcao') {
+      return 'bg-gradient-to-br from-amber-50/60 via-slate-50 to-orange-50/30';
+    }
+    // RT Master / Padrão Institucional UNINASSAU
+    return 'bg-gradient-to-br from-slate-100 via-sky-50/40 to-indigo-50/40';
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans antialiased text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className={`min-h-screen flex font-sans antialiased text-slate-900 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-700 relative ${getLayoutAtmosphere()}`}>
+      {/* Luz ambiente sutil do curso no topo da área de trabalho */}
+      <div
+        className={`fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-15 pointer-events-none transition-all duration-700 ${
+          isPsico
+            ? 'bg-blue-600'
+            : isOdonto
+            ? 'bg-rose-600'
+            : user?.perfil === 'recepcao'
+            ? 'bg-amber-500'
+            : 'bg-[#002B49]'
+        }`}
+      />
       {/* Sidebar Corporativo com Segregação Estrita */}
       <AppSidebar />
 
@@ -308,133 +338,145 @@ export function AppLayout({
 
             {/* ETAPA 1: Escolha do Perfil */}
             {!selectedPresetKey && (
-              <div className="space-y-3.5">
+              <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
                 {/* 1. Módulo Psicologia Clínica (Cor Oficial: Azul Safira) */}
                 <div>
-                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5 sticky top-0 bg-white py-0.5">
                     <span className="w-2 h-2 rounded-full bg-blue-700 inline-block"></span>
                     <span>Psicologia Clínica • Resolução CFP 06/2019 (Azul Safira)</span>
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('estagiario_psico')}
-                      className={`p-3 rounded-xl border text-left transition-all hover:border-blue-600 hover:bg-blue-50/40 ${
-                        user?.matricula === '16032935'
-                          ? 'border-blue-600 bg-blue-50/70 shadow-xs ring-1 ring-blue-600'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">Rikelme Roma Santos</span>
-                        {user?.matricula === '16032935' && <CheckIcon className="w-3.5 h-3.5 text-blue-700" />}
-                      </div>
-                      <p className="text-[10px] text-blue-700 font-semibold mt-0.5">Estudante · Psicoterapia</p>
-                      <p className="text-[9px] text-slate-400 mt-1 font-mono">Matrícula: 16032935</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('supervisor_psico')}
-                      className={`p-3 rounded-xl border text-left transition-all hover:border-blue-600 hover:bg-blue-50/40 ${
-                        user?.matricula === 'DOC-8821'
-                          ? 'border-blue-600 bg-blue-50/70 shadow-xs ring-1 ring-blue-600'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">Prof. Dr. Robert Santos</span>
-                        {user?.matricula === 'DOC-8821' && <CheckIcon className="w-3.5 h-3.5 text-blue-700" />}
-                      </div>
-                      <p className="text-[10px] text-blue-700 font-semibold mt-0.5">Supervisor (CRP 19/0844)</p>
-                      <p className="text-[9px] text-slate-400 mt-1 font-mono">Vistos & Homologação</p>
-                    </button>
+                    {Object.entries(currentUsers)
+                      .filter(([_, u]) => u.curso === 'psicologia' && u.perfil !== 'rt')
+                      .map(([key, u]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleSelectPreset(key)}
+                          className={`p-3 rounded-xl border text-left transition-all hover:border-blue-600 hover:bg-blue-50/40 ${
+                            user?.matricula === u.matricula
+                              ? 'border-blue-600 bg-blue-50/70 shadow-xs ring-1 ring-blue-600'
+                              : 'border-slate-200 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 truncate">{u.nome}</span>
+                            {user?.matricula === u.matricula && (
+                              <CheckIcon className="w-3.5 h-3.5 text-blue-700 shrink-0 ml-1" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p className="text-[10px] text-blue-700 font-semibold truncate">
+                              {u.perfil === 'estagiario' ? 'Estudante · Psicoterapia' : 'Supervisor Docente'}
+                            </p>
+                            {u.custom && (
+                              <span className="text-[8px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.2 rounded shrink-0">
+                                Novo
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-slate-400 mt-1 font-mono">Matrícula: {u.matricula}</p>
+                        </button>
+                      ))}
                   </div>
                 </div>
 
                 {/* 2. Módulo Odontologia Integrada (Cor Oficial: Granada / Bordô & Verde Clínico) */}
                 <div>
-                  <p className="text-[10px] font-bold text-[#881337] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold text-[#881337] uppercase tracking-wider mb-1.5 flex items-center gap-1.5 sticky top-0 bg-white py-0.5">
                     <span className="w-2 h-2 rounded-full bg-[#881337] inline-block"></span>
                     <span>Odontologia Integrada • Supervisão CFO (Granada / Bordô)</span>
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('estagiario_odonto')}
-                      className={`p-3 rounded-xl border text-left transition-all hover:border-[#881337] hover:bg-rose-50/40 ${
-                        user?.matricula === '16024402'
-                          ? 'border-[#881337] bg-rose-50/70 shadow-xs ring-1 ring-[#881337]'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">Augusto Cesar Farias</span>
-                        {user?.matricula === '16024402' && <CheckIcon className="w-3.5 h-3.5 text-[#881337]" />}
-                      </div>
-                      <p className="text-[10px] text-[#881337] font-semibold mt-0.5">Estudante · Dupla Clínica</p>
-                      <p className="text-[9px] text-slate-400 mt-1 font-mono">Matrícula: 16024402</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('supervisor_odonto')}
-                      className={`p-3 rounded-xl border text-left transition-all hover:border-[#881337] hover:bg-rose-50/40 ${
-                        user?.matricula === 'DOC-9122'
-                          ? 'border-[#881337] bg-rose-50/70 shadow-xs ring-1 ring-[#881337]'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">Profa. Dra. Bianca Nubia</span>
-                        {user?.matricula === 'DOC-9122' && <CheckIcon className="w-3.5 h-3.5 text-[#881337]" />}
-                      </div>
-                      <p className="text-[10px] text-[#881337] font-semibold mt-0.5">Supervisora (CRO-SE 4512)</p>
-                      <p className="text-[9px] text-slate-400 mt-1 font-mono">Homologação de Cadeira</p>
-                    </button>
+                    {Object.entries(currentUsers)
+                      .filter(
+                        ([_, u]) =>
+                          u.curso === 'odontologia' && u.perfil !== 'recepcao' && u.perfil !== 'rt'
+                      )
+                      .map(([key, u]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleSelectPreset(key)}
+                          className={`p-3 rounded-xl border text-left transition-all hover:border-[#881337] hover:bg-rose-50/40 ${
+                            user?.matricula === u.matricula
+                              ? 'border-[#881337] bg-rose-50/70 shadow-xs ring-1 ring-[#881337]'
+                              : 'border-slate-200 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 truncate">{u.nome}</span>
+                            {user?.matricula === u.matricula && (
+                              <CheckIcon className="w-3.5 h-3.5 text-[#881337] shrink-0 ml-1" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p className="text-[10px] text-[#881337] font-semibold truncate">
+                              {u.perfil === 'estagiario' ? 'Estudante · Odonto' : 'Supervisora Docente'}
+                            </p>
+                            {u.custom && (
+                              <span className="text-[8px] bg-rose-100 text-[#881337] font-bold px-1.5 py-0.2 rounded shrink-0">
+                                Novo
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-slate-400 mt-1 font-mono">Matrícula: {u.matricula}</p>
+                        </button>
+                      ))}
                   </div>
                 </div>
 
                 {/* 3. Módulos Institucionais UNINASSAU (Cores Oficiais: Azul Marinho & Dourado) */}
                 <div>
-                  <p className="text-[10px] font-bold text-[#002B49] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold text-[#002B49] uppercase tracking-wider mb-1.5 flex items-center gap-1.5 sticky top-0 bg-white py-0.5">
                     <span className="w-2 h-2 rounded-full bg-[#FFB800] inline-block"></span>
                     <span>Gestão & Controladoria UNINASSAU (Azul Marinho & Dourado)</span>
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('recepcao')}
-                      className={`p-3 rounded-xl border text-left transition-all hover:border-[#B45309] hover:bg-amber-50/40 ${
-                        user?.perfil === 'recepcao'
-                          ? 'border-[#B45309] bg-amber-50/70 shadow-xs ring-1 ring-[#B45309]'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">Recepção Geral</span>
-                        {user?.perfil === 'recepcao' && <CheckIcon className="w-3.5 h-3.5 text-amber-700" />}
-                      </div>
-                      <p className="text-[10px] text-amber-800 font-semibold mt-0.5">Acolhimento & Triagem</p>
-                      <p className="text-[9px] text-slate-400 mt-1 font-mono">Salvaguarda RN-001</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('rt_master')}
-                      className={`p-3 rounded-xl border text-left transition-all hover:border-[#002B49] hover:bg-blue-50/40 ${
-                        user?.perfil === 'rt'
-                          ? 'border-[#002B49] bg-indigo-50/70 shadow-xs ring-1 ring-[#002B49]'
-                          : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#002B49]">Dra. Camila</span>
-                        {user?.perfil === 'rt' && <CheckIcon className="w-3.5 h-3.5 text-[#002B49]" />}
-                      </div>
-                      <p className="text-[10px] text-[#002B49] font-bold mt-0.5">Responsável Técnica Master</p>
-                      <p className="text-[9px] text-slate-400 mt-1 font-mono">Custódia Legal 20 Anos</p>
-                    </button>
+                    {Object.entries(currentUsers)
+                      .filter(([_, u]) => u.perfil === 'rt' || u.perfil === 'recepcao')
+                      .map(([key, u]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleSelectPreset(key)}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            u.perfil === 'recepcao'
+                              ? user?.perfil === 'recepcao'
+                                ? 'border-[#B45309] bg-amber-50/70 shadow-xs ring-1 ring-[#B45309]'
+                                : 'border-slate-200 bg-white hover:border-[#B45309] hover:bg-amber-50/40'
+                              : user?.perfil === 'rt'
+                              ? 'border-[#002B49] bg-indigo-50/70 shadow-xs ring-1 ring-[#002B49]'
+                              : 'border-slate-200 bg-white hover:border-[#002B49] hover:bg-blue-50/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 truncate">{u.nome}</span>
+                            {user?.matricula === u.matricula && (
+                              <CheckIcon
+                                className={`w-3.5 h-3.5 shrink-0 ml-1 ${
+                                  u.perfil === 'recepcao' ? 'text-amber-700' : 'text-[#002B49]'
+                                }`}
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p
+                              className={`text-[10px] font-semibold truncate ${
+                                u.perfil === 'recepcao' ? 'text-amber-800' : 'text-[#002B49]'
+                              }`}
+                            >
+                              {u.perfil === 'recepcao' ? 'Acolhimento & Triagem' : 'RT Master Institucional'}
+                            </p>
+                            {u.custom && (
+                              <span className="text-[8px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded shrink-0">
+                                Novo
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-slate-400 mt-1 font-mono">Matrícula: {u.matricula}</p>
+                        </button>
+                      ))}
                   </div>
                 </div>
               </div>

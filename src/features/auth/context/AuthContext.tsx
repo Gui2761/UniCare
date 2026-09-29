@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../../../services/api';
 
 export type RoleType = 'estagiario' | 'supervisor' | 'recepcao' | 'rt';
 export type CourseType = 'psicologia' | 'odontologia';
@@ -11,6 +12,7 @@ export interface User {
   curso: CourseType;
   matricula: string;
   registro_profissional?: string;
+  custom?: boolean;
 }
 
 export const PRESET_USERS: Record<string, User> = {
@@ -68,23 +70,38 @@ export const PRESET_USERS: Record<string, User> = {
   },
 };
 
-import { api } from '../../../services/api';
-
 interface AuthContextType {
   user: User | null;
+  allUsers: Record<string, User>;
   isAuthenticated: boolean;
   login: (presetKey: string) => Promise<void>;
   loginCustom: (user: User) => void;
   loginWithCredentials: (emailOuMatricula: string, senha: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   switchUser: (presetKey: string) => Promise<void>;
+  createUser: (userData: Omit<User, 'id'>) => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'unicare_auth_user';
+const ALL_USERS_STORAGE_KEY = 'unicare_all_users';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Lista unificada de usuários (Presets + Criados Dinamicamente por Supervisores/RT)
+  const [allUsers, setAllUsers] = useState<Record<string, User>>(() => {
+    try {
+      const stored = localStorage.getItem(ALL_USERS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...PRESET_USERS, ...parsed };
+      }
+    } catch {
+      // Fallback para os presets institucionais
+    }
+    return PRESET_USERS;
+  });
+
   const [user, setUser] = useState<User | null>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -92,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return JSON.parse(stored);
       }
     } catch {
-      // Fallback para usuário inicial
+      // Fallback
     }
     return PRESET_USERS.estagiario_psico;
   });
@@ -109,18 +126,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.login(matricula, 'unicare123');
     } catch {
-      // Backend pode estar em inicialização ou operando offline
+      // Backend em sincronização offline
     }
   };
 
   const login = async (presetKey: string) => {
-    const selected = PRESET_USERS[presetKey] || PRESET_USERS.estagiario_psico;
+    const selected = allUsers[presetKey] || PRESET_USERS[presetKey] || PRESET_USERS.estagiario_psico;
     setUser(selected);
     await syncBackendToken(selected.matricula);
   };
 
   const loginCustom = (newUser: User) => {
     setUser(newUser);
+  };
+
+  const createUser = (userData: Omit<User, 'id'>): string => {
+    const cleanMatricula = userData.matricula.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const newKey = `usr_${cleanMatricula}_${Date.now().toString().slice(-4)}`;
+    const newUser: User = {
+      ...userData,
+      id: Date.now(),
+      custom: true,
+    };
+
+    setAllUsers((prev) => {
+      const updated = { ...prev, [newKey]: newUser };
+      try {
+        localStorage.setItem(ALL_USERS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Falha ao persistir usuários:', e);
+      }
+      return updated;
+    });
+
+    return newKey;
   };
 
   const loginWithCredentials = async (emailOuMatricula: string, senha: string) => {
@@ -156,12 +195,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
+        allUsers,
         isAuthenticated: !!user,
         login,
         loginCustom,
         loginWithCredentials,
         logout,
         switchUser,
+        createUser,
       }}
     >
       {children}

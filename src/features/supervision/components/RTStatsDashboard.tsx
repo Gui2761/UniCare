@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, type RelatorioEstatisticas, type ApiLogAuditoria } from '../../../services/api';
 import { useClinic } from '../../clinic/context/ClinicContext';
+import { useAuth, type RoleType, type CourseType } from '../../auth/context/AuthContext';
 import {
   ChartBarIcon,
   ShieldCheckIcon,
@@ -12,15 +13,32 @@ import {
   DocumentTextIcon,
   ClipboardDocumentCheckIcon,
   BuildingOfficeIcon,
+  PlusIcon,
+  XMarkIcon,
+  CheckCircleIcon,
+  KeyIcon,
 } from '../../../components/icons/CorporateIcons';
 
 export function RTStatsDashboard() {
   const { pacientes, agendamentos, evolucoesPsico, planosTratamento } = useClinic();
+  const { allUsers, createUser } = useAuth();
   const [stats, setStats] = useState<RelatorioEstatisticas | null>(null);
   const [logs, setLogs] = useState<ApiLogAuditoria[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filtroLog, setFiltroLog] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'indicadores' | 'custodia' | 'auditoria'>('indicadores');
+  const [activeTab, setActiveTab] = useState<'indicadores' | 'custodia' | 'auditoria' | 'usuarios'>('indicadores');
+
+  // Estados de Criação e Gestão de Usuários RBAC pela RT Master
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [formNome, setFormNome] = useState('');
+  const [formMatricula, setFormMatricula] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formPerfil, setFormPerfil] = useState<RoleType>('supervisor');
+  const [formCurso, setFormCurso] = useState<CourseType>('psicologia');
+  const [formRegistro, setFormRegistro] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userSuccessMsg, setUserSuccessMsg] = useState('');
+  const [userErrorMsg, setUserErrorMsg] = useState('');
 
   // Estado para busca de custódia de prontuários (RF-006)
   const [buscaPaciente, setBuscaPaciente] = useState<string>('');
@@ -90,8 +108,76 @@ export function RTStatsDashboard() {
     (e) => e.pacienteId === pacienteSelecionadoCustodia?.id
   );
 
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserErrorMsg('');
+
+    if (!formNome.trim() || !formMatricula.trim()) {
+      setUserErrorMsg('Nome completo e Matrícula são obrigatórios.');
+      return;
+    }
+
+    const cleanMatricula = formMatricula.trim();
+    const cleanEmail =
+      formEmail.trim() ||
+      `${formNome.trim().toLowerCase().split(' ')[0]}.${cleanMatricula}@uninassau.edu.br`;
+
+    createUser({
+      nome: formNome.trim(),
+      matricula: cleanMatricula,
+      email: cleanEmail,
+      perfil: formPerfil,
+      curso: formPerfil === 'recepcao' ? 'odontologia' : formCurso,
+      registro_profissional: formRegistro.trim() || undefined,
+    });
+
+    setUserSuccessMsg(
+      `Perfil de ${formNome.trim()} (${
+        formPerfil === 'supervisor'
+          ? 'Supervisor'
+          : formPerfil === 'estagiario'
+          ? 'Estagiário'
+          : 'Recepção'
+      }) cadastrado com sucesso! Já está visível na tela de login.`
+    );
+    setFormNome('');
+    setFormMatricula('');
+    setFormEmail('');
+    setFormRegistro('');
+    setShowCreateUserModal(false);
+
+    setTimeout(() => {
+      setUserSuccessMsg('');
+    }, 6000);
+  };
+
+  const usersList = Object.entries(allUsers || {});
+  const filteredUsers = usersList.filter(
+    ([_, u]) =>
+      u.nome.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      u.matricula.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      u.perfil.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      u.curso.toLowerCase().includes(userSearchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
+      {/* Feedback Toast de Sucesso da RT */}
+      {userSuccessMsg && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircleIcon className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{userSuccessMsg}</span>
+          </div>
+          <button
+            onClick={() => setUserSuccessMsg('')}
+            className="text-emerald-700 hover:text-emerald-900"
+          >
+            <XMarkIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Cabeçalho Corporativo Institucional (RF-006 & RN-003) */}
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -122,10 +208,10 @@ export function RTStatsDashboard() {
             className="flex items-center gap-2 px-3.5 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold transition-colors shadow-xs"
           >
             <PrinterIcon className="w-4 h-4 text-slate-500" />
-            <span>Imprimir Relatório Executivo</span>
+            <span className="hidden sm:inline">Imprimir Relatório</span>
           </button>
 
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 flex-wrap gap-1">
             <button
               onClick={() => setActiveTab('indicadores')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
@@ -146,7 +232,7 @@ export function RTStatsDashboard() {
               }`}
             >
               <ClipboardDocumentCheckIcon className="w-3.5 h-3.5" />
-              <span>Custódia de Prontuários (RF-006)</span>
+              <span>Custódia (RF-006)</span>
             </button>
             <button
               onClick={() => setActiveTab('auditoria')}
@@ -157,7 +243,18 @@ export function RTStatsDashboard() {
               }`}
             >
               <ShieldCheckIcon className="w-3.5 h-3.5" />
-              <span>Auditoria LGPD ({logs.length})</span>
+              <span>Auditoria ({logs.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('usuarios')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'usuarios'
+                  ? 'bg-[#002B49] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserGroupIcon className="w-3.5 h-3.5" />
+              <span>Usuários RBAC ({usersList.length})</span>
             </button>
           </div>
         </div>
@@ -592,6 +689,317 @@ export function RTStatsDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ABA 4: GESTÃO CORPORATIVA DE USUÁRIOS & CONTROLE RBAC (RT MASTER)         */}
+      {/* ========================================================================= */}
+      {activeTab === 'usuarios' && (
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <UserGroupIcon className="w-5 h-5 text-[#002B49]" />
+                <span>Gestão Corporativa de Perfis, Credenciais & Acessos RBAC</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Painel executivo da RT Master para emissão de credenciais de Supervisores, Estagiários e Operadores de Recepção com disponibilidade instantânea no Login.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full md:w-auto">
+              <div className="relative flex-1 md:w-72">
+                <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome, matrícula, perfil..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#002B49] focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUserErrorMsg('');
+                  setShowCreateUserModal(true);
+                }}
+                className="bg-[#002B49] hover:bg-[#001D33] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 border border-[#001D33] shrink-0"
+              >
+                <PlusIcon className="w-4 h-4 text-[#FFD100]" />
+                <span>Cadastrar Usuário RBAC</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tabela de Usuários Registrados */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider border-y border-slate-200 font-semibold text-[10px]">
+                <tr>
+                  <th className="py-3 px-3">Identificação / Nome</th>
+                  <th className="py-3 px-3">E-mail Institucional</th>
+                  <th className="py-3 px-3">Perfil RBAC</th>
+                  <th className="py-3 px-3">Curso / Módulo</th>
+                  <th className="py-3 px-3">Registro Profissional</th>
+                  <th className="py-3 px-3">Origem</th>
+                  <th className="py-3 px-3">Status de Autenticação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                      Nenhum perfil de usuário localizado com os critérios informados.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map(([key, u]) => (
+                    <tr key={key} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-2xs shrink-0 ${
+                              u.curso === 'psicologia' && u.perfil !== 'rt'
+                                ? 'bg-blue-700'
+                                : u.curso === 'odontologia' && u.perfil !== 'recepcao' && u.perfil !== 'rt'
+                                ? 'bg-[#881337]'
+                                : u.perfil === 'recepcao'
+                                ? 'bg-[#B45309]'
+                                : 'bg-[#002B49]'
+                            }`}
+                          >
+                            {u.nome.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900 leading-tight">{u.nome}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">Matrícula: {u.matricula}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 font-mono text-slate-600 text-[11px]">{u.email}</td>
+                      <td className="py-3 px-3">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            u.perfil === 'rt'
+                              ? 'bg-indigo-50 text-[#002B49] border border-indigo-200'
+                              : u.perfil === 'supervisor'
+                              ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                              : u.perfil === 'recepcao'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          }`}
+                        >
+                          {u.perfil === 'rt'
+                            ? 'RT Master'
+                            : u.perfil === 'supervisor'
+                            ? 'Supervisor'
+                            : u.perfil === 'recepcao'
+                            ? 'Recepção'
+                            : 'Estagiário'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                        {u.perfil === 'recepcao' ? (
+                          <span className="text-[11px] font-semibold text-amber-800">
+                            Geral (Triagem)
+                          </span>
+                        ) : u.curso === 'psicologia' ? (
+                          <span className="text-[11px] font-semibold text-blue-700 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-700"></span>
+                            <span>Psicologia (CFP)</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-[#881337] flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#881337]"></span>
+                            <span>Odontologia (CFO)</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-slate-600 text-[11px]">
+                        {u.registro_profissional || 'Acadêmico'}
+                      </td>
+                      <td className="py-3 px-3">
+                        {u.custom ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                            Criado na Sessão
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                            Padrão UNINASSAU
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
+                          <span>Habilitado (Senha)</span>
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Criação de Usuários RBAC pela RT Master */}
+      {showCreateUserModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#002B49] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  <KeyIcon className="w-4 h-4 text-[#FFD100]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Cadastrar Usuário RBAC (RT Master)</h3>
+                  <p className="text-[10px] text-slate-500">
+                    Crie credenciais para Supervisores, Estagiários ou Recepção com login automático.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateUserModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateUser} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Tipo de Perfil RBAC *
+                  </label>
+                  <select
+                    value={formPerfil}
+                    onChange={(e) => setFormPerfil(e.target.value as RoleType)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49]"
+                  >
+                    <option value="supervisor">Supervisor Docente</option>
+                    <option value="estagiario">Acadêmico Estagiário</option>
+                    <option value="recepcao">Operador de Recepção</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Curso / Área de Atuação *
+                  </label>
+                  <select
+                    value={formCurso}
+                    disabled={formPerfil === 'recepcao'}
+                    onChange={(e) => setFormCurso(e.target.value as CourseType)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] disabled:opacity-50"
+                  >
+                    <option value="psicologia">Psicologia (SPA)</option>
+                    <option value="odontologia">Odontologia Integrada</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  value={formNome}
+                  onChange={(e) => setFormNome(e.target.value)}
+                  placeholder="Ex: Profa. Claudia Martins Albuquerque"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] focus:ring-1 focus:ring-[#002B49]/20"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Matrícula Institucional *
+                  </label>
+                  <input
+                    type="text"
+                    value={formMatricula}
+                    onChange={(e) => setFormMatricula(e.target.value)}
+                    placeholder="Ex: DOC-7744 ou 16039912"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] focus:ring-1 focus:ring-[#002B49]/20 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Registro Profissional (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formRegistro}
+                    onChange={(e) => setFormRegistro(e.target.value)}
+                    placeholder={
+                      formPerfil === 'supervisor' && formCurso === 'psicologia'
+                        ? 'Ex: CRP 19/1234'
+                        : formPerfil === 'supervisor' && formCurso === 'odontologia'
+                        ? 'Ex: CRO-SE 5678'
+                        : 'Ex: 9º Período / Cadeira 02'
+                    }
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  E-mail Institucional (Opcional)
+                </label>
+                <input
+                  type="email"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  placeholder="Ex: claudia.martins@uninassau.edu.br"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] font-mono text-[11px]"
+                />
+              </div>
+
+              {userErrorMsg && (
+                <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+                  {userErrorMsg}
+                </div>
+              )}
+
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-[11px] text-amber-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold">
+                  <ShieldCheckIcon className="w-4 h-4 text-amber-700" />
+                  <span>Conformidade RBAC & Regra de Acesso com Senha</span>
+                </div>
+                <p className="text-[10px] text-slate-600">
+                  O perfil cadastrado será adicionado automaticamente às opções de login do respectivo curso. Para acessar, o usuário deverá confirmar a senha padrão institucional <code className="font-mono font-bold bg-white px-1 py-0.5 rounded border border-amber-200">unicare123</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateUserModal(false)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-bold transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#002B49] hover:bg-[#001D33] text-white rounded-xl font-bold transition-all shadow-xs border border-[#001D33] flex items-center gap-1.5"
+                >
+                  <PlusIcon className="w-4 h-4 text-[#FFD100]" />
+                  <span>Cadastrar e Habilitar Login</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

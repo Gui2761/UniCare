@@ -19,12 +19,13 @@ interface LoginFieldsProps {
 
 export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, allUsers } = useAuth();
+  const currentUsers = allUsers || PRESET_USERS;
 
   // Perfis selecionados dentro de cada menu de curso
-  const [selectedPsicoProfile, setSelectedPsicoProfile] = useState<'estagiario_psico' | 'supervisor_psico'>('estagiario_psico');
-  const [selectedOdontoProfile, setSelectedOdontoProfile] = useState<'estagiario_odonto' | 'supervisor_odonto'>('estagiario_odonto');
-  const [selectedInstitucionalProfile, setSelectedInstitucionalProfile] = useState<'recepcao' | 'rt_master'>('recepcao');
+  const [selectedPsicoProfile, setSelectedPsicoProfile] = useState<string>('estagiario_psico');
+  const [selectedOdontoProfile, setSelectedOdontoProfile] = useState<string>('estagiario_odonto');
+  const [selectedInstitucionalProfile, setSelectedInstitucionalProfile] = useState<string>('recepcao');
 
   // Senhas e estados de visibilidade
   const [password, setPassword] = useState('unicare123');
@@ -42,30 +43,32 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
     setErrorMsg('');
   }, [activeDomain]);
 
-  // Roteamento determinístico por chave de usuário
+  // Roteamento determinístico por chave de usuário (suporta presets e perfis dinâmicos)
   const getDestinationRoute = (presetKey: string) => {
-    switch (presetKey) {
-      case 'estagiario_psico':
-        return '/psi/prontuario';
-      case 'supervisor_psico':
-        return '/psi/supervisao';
-      case 'estagiario_odonto':
-        return '/ficha-odonto';
-      case 'supervisor_odonto':
-        return '/supervisao';
-      case 'recepcao':
-        return '/recepcao';
-      case 'rt_master':
-        return '/rt/relatorios';
-      default:
-        return '/psi/prontuario';
+    const target = currentUsers[presetKey] || PRESET_USERS[presetKey];
+    if (!target) return '/psi/prontuario';
+
+    if (target.curso === 'psicologia') {
+      return target.perfil === 'supervisor' ? '/psi/supervisao' : '/psi/prontuario';
     }
+    if (target.curso === 'odontologia') {
+      if (target.perfil === 'recepcao') return '/recepcao';
+      return target.perfil === 'supervisor' ? '/supervisao' : '/ficha-odonto';
+    }
+    if (target.perfil === 'recepcao') return '/recepcao';
+    if (target.perfil === 'rt') return '/rt/relatorios';
+    return '/psi/prontuario';
   };
 
   // Submit dos Menus por Curso (Psicologia, Odontologia, Gestão)
   const handleDomainLogin = async (e: React.FormEvent, presetKey: string) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (!password.trim()) {
+      setErrorMsg('Por favor, informe a senha institucional para autenticar este perfil.');
+      return;
+    }
 
     if (password.trim() !== 'unicare123') {
       setErrorMsg('Senha institucional incorreta. A senha padrão de homologação é unicare123.');
@@ -106,26 +109,46 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
       return;
     }
 
+    // Busca dinâmica em toda a base de usuários (presets + criados)
     let resolvedKey: string | null = null;
-    if (ident === '16032935' || ident.includes('rikelme')) {
-      resolvedKey = 'estagiario_psico';
-      onDomainChange('psicologia');
-    } else if (ident === '16024402' || ident.includes('augusto')) {
-      resolvedKey = 'estagiario_odonto';
-      onDomainChange('odontologia');
-    } else if (ident === 'doc-8821' || ident.includes('robert')) {
-      resolvedKey = 'supervisor_psico';
-      onDomainChange('psicologia');
-    } else if (ident === 'doc-9122' || ident.includes('bianca')) {
-      resolvedKey = 'supervisor_odonto';
-      onDomainChange('odontologia');
-    } else if (ident === 'rec-001' || ident === 'rec-2026-01' || ident.includes('recepcao')) {
-      resolvedKey = 'recepcao';
-      onDomainChange('institucional');
-    } else if (ident === 'rt-001' || ident.includes('camila') || ident.includes('rt')) {
-      resolvedKey = 'rt_master';
-      onDomainChange('institucional');
-    } else {
+    for (const [key, u] of Object.entries(currentUsers)) {
+      if (
+        u.matricula.toLowerCase() === ident ||
+        u.email.toLowerCase() === ident ||
+        u.nome.toLowerCase().includes(ident)
+      ) {
+        resolvedKey = key;
+        if (u.curso === 'psicologia') onDomainChange('psicologia');
+        else if (u.curso === 'odontologia' && u.perfil !== 'recepcao') onDomainChange('odontologia');
+        else onDomainChange('institucional');
+        break;
+      }
+    }
+
+    // Fallbacks para identificadores parciais
+    if (!resolvedKey) {
+      if (ident === '16032935' || ident.includes('rikelme')) {
+        resolvedKey = 'estagiario_psico';
+        onDomainChange('psicologia');
+      } else if (ident === '16024402' || ident.includes('augusto')) {
+        resolvedKey = 'estagiario_odonto';
+        onDomainChange('odontologia');
+      } else if (ident === 'doc-8821' || ident.includes('robert')) {
+        resolvedKey = 'supervisor_psico';
+        onDomainChange('psicologia');
+      } else if (ident === 'doc-9122' || ident.includes('bianca')) {
+        resolvedKey = 'supervisor_odonto';
+        onDomainChange('odontologia');
+      } else if (ident === 'rec-001' || ident === 'rec-2026-01' || ident.includes('recepcao')) {
+        resolvedKey = 'recepcao';
+        onDomainChange('institucional');
+      } else if (ident === 'rt-001' || ident.includes('camila') || ident.includes('rt')) {
+        resolvedKey = 'rt_master';
+        onDomainChange('institucional');
+      }
+    }
+
+    if (!resolvedKey) {
       setErrorMsg('Credencial não localizada na base institucional da UNINASSAU.');
       return;
     }
@@ -244,63 +267,59 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setSelectedPsicoProfile('estagiario_psico')}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  selectedPsicoProfile === 'estagiario_psico'
-                    ? 'border-blue-600 bg-blue-50/80 shadow-xs ring-2 ring-blue-600/30'
-                    : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900">Rikelme Roma Santos</span>
-                  {selectedPsicoProfile === 'estagiario_psico' && (
-                    <CheckIcon className="w-4 h-4 text-blue-700 shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-blue-700 font-semibold">Estudante · Psicoterapia</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Matrícula: 16032935</p>
-                <div className="mt-2 text-[9px] text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded font-medium inline-block">
-                  Prontuário SPA & Evolução
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedPsicoProfile('supervisor_psico')}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  selectedPsicoProfile === 'supervisor_psico'
-                    ? 'border-blue-600 bg-blue-50/80 shadow-xs ring-2 ring-blue-600/30'
-                    : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900">Prof. Dr. Robert Santos</span>
-                  {selectedPsicoProfile === 'supervisor_psico' && (
-                    <CheckIcon className="w-4 h-4 text-blue-700 shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-blue-700 font-semibold">Supervisor de Estágio</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Registro: CRP 19/0844</p>
-                <div className="mt-2 text-[9px] text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded font-medium inline-block">
-                  Homologação & Vistos Digitais
-                </div>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+              {Object.entries(currentUsers)
+                .filter(([_, u]) => u.curso === 'psicologia' && u.perfil !== 'rt')
+                .map(([key, u]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedPsicoProfile(key)}
+                    className={`p-3 rounded-2xl border text-left transition-all ${
+                      selectedPsicoProfile === key
+                        ? 'border-blue-600 bg-blue-50/80 shadow-xs ring-2 ring-blue-600/30'
+                        : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900 truncate">{u.nome}</span>
+                      {selectedPsicoProfile === key && (
+                        <CheckIcon className="w-4 h-4 text-blue-700 shrink-0 ml-1" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[11px] text-blue-700 font-semibold truncate">
+                        {u.perfil === 'estagiario' ? 'Estudante · Psicoterapia' : 'Supervisor de Estágio'}
+                      </p>
+                      {u.custom && (
+                        <span className="text-[8px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.2 rounded shrink-0">
+                          Novo Perfil
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      {u.matricula ? `Matrícula: ${u.matricula}` : ''}
+                      {u.registro_profissional ? ` • ${u.registro_profissional}` : ''}
+                    </p>
+                    <div className="mt-2 text-[9px] text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded font-medium inline-block truncate max-w-full">
+                      {u.perfil === 'estagiario' ? 'Prontuário SPA & Evolução' : 'Homologação & Vistos Digitais'}
+                    </div>
+                  </button>
+                ))}
             </div>
 
-            {/* Senha e Confirmação */}
+            {/* Senha Obrigatória e Confirmação de Entrada */}
             <div className="pt-2 border-t border-slate-100 space-y-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Senha Institucional de Acesso
+                  Senha Institucional de Acesso (Obrigatória)
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Digite a senha institucional"
                     className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 outline-none transition-all font-mono pr-10"
                   />
                   <button
@@ -329,7 +348,13 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
                 <span>
                   {isLoading
                     ? 'Autenticando no SPA...'
-                    : `Acessar como ${PRESET_USERS[selectedPsicoProfile].nome.split(' ')[0]} (${selectedPsicoProfile === 'estagiario_psico' ? 'Estudante' : 'Supervisor'})`}
+                    : `Acessar como ${
+                        (currentUsers[selectedPsicoProfile] || PRESET_USERS.estagiario_psico).nome.split(' ')[0]
+                      } (${
+                        (currentUsers[selectedPsicoProfile] || PRESET_USERS.estagiario_psico).perfil === 'estagiario'
+                          ? 'Estudante'
+                          : 'Supervisor'
+                      })`}
                 </span>
               </button>
             </div>
@@ -351,63 +376,62 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setSelectedOdontoProfile('estagiario_odonto')}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  selectedOdontoProfile === 'estagiario_odonto'
-                    ? 'border-[#881337] bg-rose-50/80 shadow-xs ring-2 ring-[#881337]/30'
-                    : 'border-slate-200 bg-white hover:border-rose-300 hover:bg-rose-50/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900">Augusto Cesar Farias</span>
-                  {selectedOdontoProfile === 'estagiario_odonto' && (
-                    <CheckIcon className="w-4 h-4 text-[#881337] shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-[#881337] font-semibold">Estudante · Dupla Clínica</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Matrícula: 16024402</p>
-                <div className="mt-2 text-[9px] text-[#881337] bg-rose-100/70 px-2 py-0.5 rounded font-medium inline-block">
-                  Odontograma 2D & Periodonto
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedOdontoProfile('supervisor_odonto')}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  selectedOdontoProfile === 'supervisor_odonto'
-                    ? 'border-[#881337] bg-rose-50/80 shadow-xs ring-2 ring-[#881337]/30'
-                    : 'border-slate-200 bg-white hover:border-rose-300 hover:bg-rose-50/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900">Profa. Dra. Bianca Nubia</span>
-                  {selectedOdontoProfile === 'supervisor_odonto' && (
-                    <CheckIcon className="w-4 h-4 text-[#881337] shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-[#881337] font-semibold">Supervisora Docente</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Registro: CRO-SE 4512</p>
-                <div className="mt-2 text-[9px] text-[#881337] bg-rose-100/70 px-2 py-0.5 rounded font-medium inline-block">
-                  Homologação em Cadeira
-                </div>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+              {Object.entries(currentUsers)
+                .filter(
+                  ([_, u]) =>
+                    u.curso === 'odontologia' && u.perfil !== 'recepcao' && u.perfil !== 'rt'
+                )
+                .map(([key, u]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedOdontoProfile(key)}
+                    className={`p-3 rounded-2xl border text-left transition-all ${
+                      selectedOdontoProfile === key
+                        ? 'border-[#881337] bg-rose-50/80 shadow-xs ring-2 ring-[#881337]/30'
+                        : 'border-slate-200 bg-white hover:border-rose-300 hover:bg-rose-50/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900 truncate">{u.nome}</span>
+                      {selectedOdontoProfile === key && (
+                        <CheckIcon className="w-4 h-4 text-[#881337] shrink-0 ml-1" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[11px] text-[#881337] font-semibold truncate">
+                        {u.perfil === 'estagiario' ? 'Estudante · Dupla Clínica' : 'Supervisora Docente'}
+                      </p>
+                      {u.custom && (
+                        <span className="text-[8px] bg-rose-100 text-[#881337] font-bold px-1.5 py-0.2 rounded shrink-0">
+                          Novo Perfil
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      {u.matricula ? `Matrícula: ${u.matricula}` : ''}
+                      {u.registro_profissional ? ` • ${u.registro_profissional}` : ''}
+                    </p>
+                    <div className="mt-2 text-[9px] text-[#881337] bg-rose-100/70 px-2 py-0.5 rounded font-medium inline-block truncate max-w-full">
+                      {u.perfil === 'estagiario' ? 'Odontograma 2D & Periodonto' : 'Homologação em Cadeira'}
+                    </div>
+                  </button>
+                ))}
             </div>
 
-            {/* Senha e Confirmação */}
+            {/* Senha Obrigatória e Confirmação de Entrada */}
             <div className="pt-2 border-t border-slate-100 space-y-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Senha Institucional de Acesso
+                  Senha Institucional de Acesso (Obrigatória)
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Digite a senha institucional"
                     className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-[#881337] focus:ring-2 focus:ring-[#881337]/10 outline-none transition-all font-mono pr-10"
                   />
                   <button
@@ -436,7 +460,13 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
                 <span>
                   {isLoading
                     ? 'Autenticando na Odontologia...'
-                    : `Acessar como ${PRESET_USERS[selectedOdontoProfile].nome.split(' ')[0]} (${selectedOdontoProfile === 'estagiario_odonto' ? 'Estudante' : 'Supervisora'})`}
+                    : `Acessar como ${
+                        (currentUsers[selectedOdontoProfile] || PRESET_USERS.estagiario_odonto).nome.split(' ')[0]
+                      } (${
+                        (currentUsers[selectedOdontoProfile] || PRESET_USERS.estagiario_odonto).perfil === 'estagiario'
+                          ? 'Estudante'
+                          : 'Supervisora'
+                      })`}
                 </span>
               </button>
             </div>
@@ -458,63 +488,72 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setSelectedInstitucionalProfile('recepcao')}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  selectedInstitucionalProfile === 'recepcao'
-                    ? 'border-[#B45309] bg-amber-50/80 shadow-xs ring-2 ring-[#B45309]/30'
-                    : 'border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900">Recepção Geral</span>
-                  {selectedInstitucionalProfile === 'recepcao' && (
-                    <CheckIcon className="w-4 h-4 text-[#B45309] shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-[#B45309] font-semibold">Central de Acolhimento</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Matrícula: REC-2026-01</p>
-                <div className="mt-2 text-[9px] text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded font-medium inline-block">
-                  Triagem & Bloqueio RN-001
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedInstitucionalProfile('rt_master')}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  selectedInstitucionalProfile === 'rt_master'
-                    ? 'border-[#002B49] bg-indigo-50/80 shadow-xs ring-2 ring-[#002B49]/30'
-                    : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900">Dra. Camila</span>
-                  {selectedInstitucionalProfile === 'rt_master' && (
-                    <CheckIcon className="w-4 h-4 text-[#002B49] shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-indigo-800 font-bold">RT Master Institucional</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Matrícula: RT-001</p>
-                <div className="mt-2 text-[9px] text-indigo-900 bg-indigo-100/70 px-2 py-0.5 rounded font-medium inline-block">
-                  Custódia 20 Anos & Auditoria
-                </div>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+              {Object.entries(currentUsers)
+                .filter(([_, u]) => u.perfil === 'rt' || u.perfil === 'recepcao')
+                .map(([key, u]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedInstitucionalProfile(key)}
+                    className={`p-3 rounded-2xl border text-left transition-all ${
+                      selectedInstitucionalProfile === key
+                        ? u.perfil === 'recepcao'
+                          ? 'border-[#B45309] bg-amber-50/80 shadow-xs ring-2 ring-[#B45309]/30'
+                          : 'border-[#002B49] bg-indigo-50/80 shadow-xs ring-2 ring-[#002B49]/30'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/40'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900 truncate">{u.nome}</span>
+                      {selectedInstitucionalProfile === key && (
+                        <CheckIcon
+                          className={`w-4 h-4 shrink-0 ml-1 ${
+                            u.perfil === 'recepcao' ? 'text-[#B45309]' : 'text-[#002B49]'
+                          }`}
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <p
+                        className={`text-[11px] font-semibold truncate ${
+                          u.perfil === 'recepcao' ? 'text-[#B45309]' : 'text-indigo-800 font-bold'
+                        }`}
+                      >
+                        {u.perfil === 'recepcao' ? 'Central de Acolhimento' : 'RT Master Institucional'}
+                      </p>
+                      {u.custom && (
+                        <span className="text-[8px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded shrink-0">
+                          Novo Perfil
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">Matrícula: {u.matricula}</p>
+                    <div
+                      className={`mt-2 text-[9px] px-2 py-0.5 rounded font-medium inline-block truncate max-w-full ${
+                        u.perfil === 'recepcao'
+                          ? 'text-amber-900 bg-amber-100/70'
+                          : 'text-indigo-900 bg-indigo-100/70'
+                      }`}
+                    >
+                      {u.perfil === 'recepcao' ? 'Triagem & Bloqueio RN-001' : 'Custódia 20 Anos & Auditoria'}
+                    </div>
+                  </button>
+                ))}
             </div>
 
-            {/* Senha e Confirmação */}
+            {/* Senha Obrigatória e Confirmação de Entrada */}
             <div className="pt-2 border-t border-slate-100 space-y-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Senha Institucional de Acesso
+                  Senha Institucional de Acesso (Obrigatória)
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Digite a senha institucional"
                     className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-[#002B49] focus:ring-2 focus:ring-[#002B49]/10 outline-none transition-all font-mono pr-10"
                   />
                   <button
@@ -543,7 +582,13 @@ export function LoginFields({ activeDomain, onDomainChange }: LoginFieldsProps) 
                 <span>
                   {isLoading
                     ? 'Autenticando...'
-                    : `Acessar como ${PRESET_USERS[selectedInstitucionalProfile].nome.split(' ')[0]} (${selectedInstitucionalProfile === 'recepcao' ? 'Recepção' : 'RT Master'})`}
+                    : `Acessar como ${
+                        (currentUsers[selectedInstitucionalProfile] || PRESET_USERS.recepcao).nome.split(' ')[0]
+                      } (${
+                        (currentUsers[selectedInstitucionalProfile] || PRESET_USERS.recepcao).perfil === 'recepcao'
+                          ? 'Recepção'
+                          : 'RT Master'
+                      })`}
                 </span>
               </button>
             </div>
