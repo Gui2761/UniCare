@@ -3,13 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import {
   LockClosedIcon,
   ShieldCheckIcon,
-  UserGroupIcon,
 } from '../../../components/icons/CorporateIcons';
 
 export function UnauthorizedPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, switchUser } = useAuth();
+  const { user } = useAuth();
 
   const attemptedPath = (location.state as { from?: { pathname?: string } })?.from?.pathname || location.pathname;
 
@@ -42,74 +41,39 @@ export function UnauthorizedPage() {
           </p>
         </div>
 
-        <div className="border-t border-slate-100 pt-5">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-            <UserGroupIcon className="w-3.5 h-3.5 text-slate-400" />
-            <span>Simular Perfil Autorizado para Homologação:</span>
-          </p>
-          <div className="grid grid-cols-2 gap-2 mb-6 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                switchUser('estagiario_psico');
+        <div className="border-t border-slate-100 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (user?.perfil === 'estagiario' && user?.curso === 'psicologia') {
                 navigate('/psi/prontuario');
-              }}
-              className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition-all shadow-2xs"
-            >
-              <div className="font-bold text-slate-900">Estagiário Psicologia</div>
-              <div className="text-slate-500 text-[10px]">Rikelme Roma Santos</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                switchUser('estagiario_odonto');
+              } else if (user?.perfil === 'estagiario' && user?.curso === 'odontologia') {
                 navigate('/ficha-odonto');
-              }}
-              className="p-3 rounded-xl border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 text-left transition-all shadow-2xs"
-            >
-              <div className="font-bold text-slate-900">Estagiário Odontologia</div>
-              <div className="text-slate-500 text-[10px]">Augusto Cesar Farias</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                switchUser('supervisor_psico');
+              } else if (user?.perfil === 'supervisor' && user?.curso === 'psicologia') {
                 navigate('/psi/supervisao');
-              }}
-              className="p-3 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-left transition-all shadow-2xs"
-            >
-              <div className="font-bold text-slate-900">Supervisor Docente</div>
-              <div className="text-slate-500 text-[10px]">Prof. Dr. Robert Santos</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                switchUser('recepcao');
+              } else if (user?.perfil === 'supervisor' && user?.curso === 'odontologia') {
+                navigate('/supervisao');
+              } else if (user?.perfil === 'recepcao') {
                 navigate('/recepcao');
-              }}
-              className="p-3 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-left transition-all shadow-2xs"
-            >
-              <div className="font-bold text-slate-900">Voltar à Recepção</div>
-              <div className="text-slate-500 text-[10px]">Agenda Logística Geral</div>
-            </button>
-          </div>
+              } else if (user?.perfil === 'rt') {
+                navigate('/rt/relatorios');
+              } else {
+                navigate('/login');
+              }
+            }}
+            className="w-full sm:w-auto bg-[#002B49] hover:bg-[#001D33] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 border border-[#001D33]"
+          >
+            <ShieldCheckIcon className="w-4 h-4 text-[#FFD100]" />
+            <span>Voltar ao Meu Módulo Autorizado</span>
+          </button>
 
-          <div className="flex justify-between items-center pt-2">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="text-xs text-slate-500 hover:text-slate-900 font-semibold"
-            >
-              ← Voltar à página anterior
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-xs"
-            >
-              Ir para Tela de Login
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="w-full sm:w-auto text-xs text-slate-500 hover:text-slate-900 font-semibold px-4 py-2 rounded-xl hover:bg-slate-100 transition-colors"
+          >
+            Ir para Tela de Login
+          </button>
         </div>
       </div>
     </div>

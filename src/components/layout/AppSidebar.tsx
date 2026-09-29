@@ -171,7 +171,7 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* NAVEGAÇÃO ESTRITAMENTE SEGREGADA */}
+        {/* NAVEGAÇÃO ESTRITAMENTE SEGREGADA CONFORME PERMISSÃO DO USUÁRIO */}
         <nav className="px-3 py-3 space-y-4">
           {/* 1. SE FOR PSICOLOGIA (OU RT NA VISÃO PSICO/GLOBAL) */}
           {(isPsicoUser || (isRT && (rtCourseView === 'psicologia' || rtCourseView === 'global'))) && (
@@ -180,23 +180,32 @@ export function AppSidebar() {
                 Serviço de Psicologia (SPA)
               </h2>
               <ul className="space-y-1">
-                <li>
-                  <NavLink to="/psi/prontuario" className={getLinkStyle}>
-                    <DocumentTextIcon className="w-4 h-4 shrink-0 text-slate-500" />
-                    <span>Prontuário Psicológico</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/psi/recepcao" className={getLinkStyle}>
-                    <CalendarIcon className="w-4 h-4 shrink-0 text-slate-500" />
-                    <span>Agenda & Triagem SPA</span>
-                  </NavLink>
-                </li>
+                {/* Prontuário Psicológico: Estagiário, Supervisor e RT */}
+                {(user?.perfil === 'estagiario' || user?.perfil === 'supervisor' || isRT) && (
+                  <li>
+                    <NavLink to="/psi/prontuario" className={getLinkStyle}>
+                      <DocumentTextIcon className="w-4 h-4 shrink-0 text-slate-500" />
+                      <span>Prontuário Psicológico</span>
+                    </NavLink>
+                  </li>
+                )}
+
+                {/* Supervisão Docente SPA: Apenas Supervisor e RT (Não aparece para Estagiário) */}
                 {(user?.perfil === 'supervisor' || isRT) && (
                   <li>
                     <NavLink to="/psi/supervisao" className={getLinkStyle}>
                       <ShieldCheckIcon className="w-4 h-4 shrink-0 text-slate-500" />
                       <span>Supervisão Docente SPA</span>
+                    </NavLink>
+                  </li>
+                )}
+
+                {/* Agenda & Triagem SPA: Apenas Recepção e RT (Não aparece para Estagiário/Supervisor) */}
+                {(isRecepcao || isRT) && (
+                  <li>
+                    <NavLink to="/psi/recepcao" className={getLinkStyle}>
+                      <CalendarIcon className="w-4 h-4 shrink-0 text-slate-500" />
+                      <span>Agenda & Triagem SPA</span>
                     </NavLink>
                   </li>
                 )}
@@ -211,23 +220,32 @@ export function AppSidebar() {
                 Clínica Odontológica
               </h2>
               <ul className="space-y-1">
-                <li>
-                  <NavLink to="/ficha-odonto" className={getLinkStyle}>
-                    <DocumentTextIcon className="w-4 h-4 shrink-0 text-slate-500" />
-                    <span>Ficha Clínica & Odontograma</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/recepcao" className={getLinkStyle}>
-                    <CalendarIcon className="w-4 h-4 shrink-0 text-slate-500" />
-                    <span>Recepção Odontológica</span>
-                  </NavLink>
-                </li>
+                {/* Ficha Clínica & Odontograma: Estagiário, Supervisor e RT */}
+                {(user?.perfil === 'estagiario' || user?.perfil === 'supervisor' || isRT) && (
+                  <li>
+                    <NavLink to="/ficha-odonto" className={getLinkStyle}>
+                      <DocumentTextIcon className="w-4 h-4 shrink-0 text-slate-500" />
+                      <span>Ficha Clínica & Odontograma</span>
+                    </NavLink>
+                  </li>
+                )}
+
+                {/* Supervisão Odontologia: Apenas Supervisor e RT (Não aparece para Estagiário) */}
                 {(user?.perfil === 'supervisor' || isRT) && (
                   <li>
                     <NavLink to="/supervisao" className={getLinkStyle}>
                       <ShieldCheckIcon className="w-4 h-4 shrink-0 text-slate-500" />
                       <span>Supervisão Odontologia</span>
+                    </NavLink>
+                  </li>
+                )}
+
+                {/* Recepção Odontológica: Apenas Recepção e RT (Não aparece para Estagiário/Supervisor) */}
+                {(isRecepcao || isRT) && (
+                  <li>
+                    <NavLink to="/recepcao" className={getLinkStyle}>
+                      <CalendarIcon className="w-4 h-4 shrink-0 text-slate-500" />
+                      <span>Recepção Odontológica</span>
                     </NavLink>
                   </li>
                 )}
@@ -267,18 +285,18 @@ export function AppSidebar() {
             </div>
           )}
 
-          {/* 4. SE FOR SUPERVISOR OU RT: LINK DE INDICADORES E CUSTÓDIA */}
-          {(user?.perfil === 'supervisor' || isRT) && (
+          {/* 4. SE FOR RT MASTER: CONTROLADORIA, AUDITORIA & CUSTÓDIA */}
+          {isRT && (
             <div className="pt-2 border-t border-slate-100">
               <h2 className="px-2 text-[10px] font-bold text-indigo-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <BuildingOfficeIcon className="w-3.5 h-3.5" />
-                <span>Controladoria & Gestão</span>
+                <span>Controladoria & RT Master</span>
               </h2>
               <ul className="space-y-1">
                 <li>
                   <NavLink to="/rt/relatorios" className={getLinkStyle}>
                     <ChartBarIcon className="w-4 h-4 shrink-0 text-indigo-600" />
-                    <span>Indicadores & Custódia Legal</span>
+                    <span>Painel Executivo & Custódia</span>
                   </NavLink>
                 </li>
               </ul>
