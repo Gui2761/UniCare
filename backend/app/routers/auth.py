@@ -12,9 +12,14 @@ router = APIRouter(prefix="/auth", tags=["Autenticação & RBAC"])
 
 @router.post("/login", response_model=Token)
 def login(request: LoginRequest, session: Session = Depends(get_session)):
-    query = select(Usuario).where(
-        (Usuario.email == request.email_ou_matricula) | (Usuario.matricula == request.email_ou_matricula)
-    )
+    ident = request.email_ou_matricula.strip()
+    # Compatibilidade com DOC-EST-02 (REC-2026-01 e REC-001)
+    if ident in ("REC-2026-01", "REC-001"):
+        query = select(Usuario).where((Usuario.matricula == "REC-001") | (Usuario.matricula == "REC-2026-01") | (Usuario.email == "recepcao@uninassau.edu.br"))
+    else:
+        query = select(Usuario).where(
+            (Usuario.email == ident) | (Usuario.matricula == ident)
+        )
     user = session.exec(query).first()
 
     if not user or not verify_password(request.senha, user.senha_hash):
