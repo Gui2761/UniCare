@@ -51,13 +51,28 @@ export function AppSidebar() {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 justify-between select-none z-30 shadow-2xs">
       <div>
-        {/* Faixa Institucional UNINASSAU Oficial */}
-        <div className="bg-[#002B49] px-4 py-2 flex items-center justify-between text-white text-[10px] font-bold tracking-wider border-b border-[#001D33]">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#FFB800] inline-block shadow-xs"></span>
-            <span className="tracking-widest font-black text-slate-100">UNINASSAU</span>
+        {/* Faixa Institucional UNINASSAU Oficial com Brasão Veritas */}
+        <div className="bg-[#002B49] px-3.5 py-2 flex items-center justify-between text-white border-b border-[#001D33] shadow-xs">
+          <div className="flex items-center gap-2">
+            <div className="p-0.5 bg-white rounded-md shadow-2xs">
+              <img
+                src="/uninassau-crest.png"
+                alt="Brasão UNINASSAU"
+                className="h-5 w-auto object-contain"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="tracking-widest font-black text-white text-[11px] leading-tight">
+                UNINASSAU
+              </span>
+              <span className="text-[7.5px] text-[#FFD100] font-mono tracking-widest font-bold">
+                VERITAS
+              </span>
+            </div>
           </div>
-          <span className="text-[#FFB800] uppercase text-[9px] font-mono tracking-tight font-bold">Campus Aracaju</span>
+          <span className="text-slate-200 uppercase text-[9px] font-mono tracking-tight font-semibold bg-white/10 px-2 py-0.5 rounded border border-white/10">
+            Aracaju
+          </span>
         </div>
 
         {/* Cabeçalho da Marca & Curso */}

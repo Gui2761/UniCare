@@ -3,19 +3,23 @@ import { MapPinIcon } from '../../../components/icons/CorporateIcons';
 export function AuthHeader() {
   return (
     <header className="flex justify-between items-center px-6 sm:px-8 py-3.5 bg-white border-b border-slate-200/80 shadow-2xs">
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-[#002B49] text-white flex items-center justify-center font-bold text-sm shadow-xs border border-[#001D33]">
-          <span className="text-[#FFB800]">U</span>C
+      <div className="flex items-center gap-3.5">
+        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center p-1 shadow-xs border border-slate-200">
+          <img
+            src="/uninassau-crest.png"
+            alt="Brasão Oficial UNINASSAU Veritas"
+            className="h-8 w-auto object-contain"
+          />
         </div>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">UniCare Enterprise Health</h1>
-            <span className="bg-[#002B49] text-white text-[9px] font-bold px-2 py-0.5 rounded tracking-wider uppercase border border-[#001D33] inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
-              <span>UNINASSAU</span>
+            <span className="bg-[#002B49] text-white text-[9px] font-bold px-2 py-0.5 rounded tracking-wider uppercase border border-[#001D33] inline-flex items-center gap-1.5 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FFD100]"></span>
+              <span className="font-mono">UNINASSAU</span>
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Hospital-Escola Integrado • Clínicas de Psicologia & Odontologia</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Hospital-Escola Integrado • Clínicas de Psicologia & Odontologia</p>
         </div>
       </div>
       <div className="hidden md:flex items-center gap-3 text-xs font-semibold">

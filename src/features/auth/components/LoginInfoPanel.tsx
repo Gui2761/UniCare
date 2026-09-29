@@ -1,15 +1,30 @@
-import { BuildingOfficeIcon, ShieldCheckIcon } from '../../../components/icons/CorporateIcons';
+import { ShieldCheckIcon } from '../../../components/icons/CorporateIcons';
 
 export function LoginInfoPanel() {
   return (
-    <div className="hidden lg:flex w-1/2 bg-slate-900 text-white p-12 flex-col justify-between relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-slate-950"></div>
+    <div className="hidden lg:flex w-1/2 bg-[#001D33] text-white p-12 flex-col justify-between relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#002B49] via-[#001D33] to-[#080E14]"></div>
 
       <div className="relative z-10">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 text-[11px] font-semibold text-blue-200 mb-8 border border-white/10 uppercase tracking-wider">
-          <BuildingOfficeIcon className="w-3.5 h-3.5" />
-          <span>Hospital-Escola UNINASSAU</span>
-        </span>
+        {/* Banner com Brasão Oficial UNINASSAU */}
+        <div className="flex items-center gap-3.5 p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 mb-8 max-w-fit shadow-lg">
+          <div className="p-1.5 bg-white rounded-xl shadow-xs">
+            <img
+              src="/uninassau-crest.png"
+              alt="Brasão Oficial UNINASSAU"
+              className="h-10 w-auto object-contain"
+            />
+          </div>
+          <div className="pr-3">
+            <div className="text-[13px] font-black tracking-wider text-white font-sans">
+              UNINASSAU
+            </div>
+            <div className="text-[10px] text-[#FFD100] font-semibold tracking-wider uppercase font-mono">
+              Centro Universitário Maurício de Nassau
+            </div>
+          </div>
+        </div>
+
         <h2 className="text-3xl font-bold leading-snug mb-4 text-white tracking-tight">
           Governança clínica, formação de excelência e proteção de dados.
         </h2>

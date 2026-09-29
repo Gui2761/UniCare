@@ -141,9 +141,15 @@ export function AppLayout({
         <header className="h-14 bg-white border-b border-slate-200/80 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shadow-2xs backdrop-blur-md">
           {/* Breadcrumb & Identificação Institucional UNINASSAU */}
           <div className="flex items-center gap-2.5 text-xs">
-            <span className="bg-[#002B49] text-white px-2 py-0.5 rounded text-[10px] font-bold tracking-wider inline-flex items-center gap-1.5 border border-[#001D33] shadow-2xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800] inline-block"></span>
-              <span>UNINASSAU</span>
+            <span className="bg-[#002B49] text-white px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider inline-flex items-center gap-2 border border-[#001D33] shadow-2xs">
+              <span className="p-0.5 bg-white rounded-xs flex items-center justify-center">
+                <img
+                  src="/uninassau-crest.png"
+                  alt="Brasão UNINASSAU"
+                  className="h-3.5 w-auto object-contain"
+                />
+              </span>
+              <span className="font-mono text-[#FFD100]">UNINASSAU</span>
             </span>
             <span className="text-slate-300">/</span>
             <span className="font-semibold text-slate-600">
@@ -267,16 +273,20 @@ export function AppLayout({
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             {/* Header do Modal */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#002B49] text-[#FFB800] flex items-center justify-center shadow-xs">
-                  <KeyIcon className="w-4 h-4" />
+              <div className="flex items-center gap-3">
+                <div className="p-1 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-center">
+                  <img
+                    src="/uninassau-crest.png"
+                    alt="Brasão Oficial UNINASSAU"
+                    className="h-8 w-auto object-contain"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-slate-900">
                       Troca Rápida de Perfil Institucional
                     </h3>
-                    <span className="text-[9px] bg-[#002B49] text-[#FFB800] font-black px-1.5 py-0.5 rounded font-mono">
+                    <span className="text-[9px] bg-[#002B49] text-[#FFD100] font-black px-1.5 py-0.5 rounded font-mono">
                       UNINASSAU
                     </span>
                   </div>
