@@ -79,8 +79,8 @@ export function LoginInfoPanel({ activeDomain }: LoginInfoPanelProps) {
           emblem: (
             <>
               <InstitutionalEmblem className="w-80 h-80 text-amber-300/10 animate-slow-spin absolute -right-16 -bottom-16 pointer-events-none select-none" />
-              <div className="w-36 h-36 absolute top-10 -right-4 pointer-events-none select-none opacity-25 animate-float-orb">
-                <img src="/uninassau-crest.png" alt="Veritas Crest" className="w-full h-full object-contain" />
+              <div className="w-40 h-40 absolute top-8 -right-4 pointer-events-none select-none animate-float-orb drop-shadow-[0_14px_28px_rgba(0,0,0,0.5)]">
+                <img src="/uninassau-crest.png" alt="Brasão Oficial UNINASSAU Veritas" className="w-full h-full object-contain" />
               </div>
             </>
           ),
@@ -107,8 +107,8 @@ export function LoginInfoPanel({ activeDomain }: LoginInfoPanelProps) {
           emblem: (
             <>
               <InstitutionalEmblem className="w-80 h-80 text-blue-300/10 animate-slow-spin absolute -right-16 -bottom-16 pointer-events-none select-none" />
-              <div className="w-36 h-36 absolute top-10 -right-4 pointer-events-none select-none opacity-20 animate-float-orb">
-                <img src="/uninassau-crest.png" alt="Veritas Crest" className="w-full h-full object-contain" />
+              <div className="w-40 h-40 absolute top-8 -right-4 pointer-events-none select-none animate-float-orb drop-shadow-[0_14px_28px_rgba(0,0,0,0.5)]">
+                <img src="/uninassau-crest.png" alt="Brasão Oficial UNINASSAU Veritas" className="w-full h-full object-contain" />
               </div>
             </>
           ),
