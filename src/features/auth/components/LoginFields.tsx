@@ -10,7 +10,7 @@ type RoleType = 'estudante' | 'docente' | 'recepcao';
 
 export function LoginFields() {
   const navigate = useNavigate();
-  const { login, switchUser } = useAuth();
+  const { login } = useAuth();
   const [activeRole, setActiveRole] = useState<RoleType>('estudante');
   const [selectedCourse, setSelectedCourse] = useState<'psicologia' | 'odontologia'>('psicologia');
   const [identifier, setIdentifier] = useState('16032935');
@@ -40,11 +40,6 @@ export function LoginFields() {
         navigate('/ficha-odonto');
       }
     }
-  };
-
-  const handleQuickLogin = (presetKey: string, targetRoute: string) => {
-    switchUser(presetKey);
-    navigate(targetRoute);
   };
 
   return (
@@ -100,24 +95,26 @@ export function LoginFields() {
             <button
               type="button"
               onClick={() => setSelectedCourse('psicologia')}
-              className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all text-center ${
+              className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all text-center flex items-center justify-center gap-1.5 ${
                 selectedCourse === 'psicologia'
-                  ? 'border-blue-600 bg-blue-50/60 text-blue-900 shadow-xs'
+                  ? 'border-blue-600 bg-blue-50/70 text-blue-900 shadow-xs ring-1 ring-blue-600/30'
                   : 'border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
-              Psicologia Clínica (SPA)
+              <span className="w-2 h-2 rounded-full bg-blue-700"></span>
+              <span>Psicologia (Azul Safira)</span>
             </button>
             <button
               type="button"
               onClick={() => setSelectedCourse('odontologia')}
-              className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all text-center ${
+              className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all text-center flex items-center justify-center gap-1.5 ${
                 selectedCourse === 'odontologia'
-                  ? 'border-emerald-600 bg-emerald-50/60 text-emerald-900 shadow-xs'
+                  ? 'border-[#881337] bg-rose-50/70 text-[#881337] shadow-xs ring-1 ring-[#881337]/30'
                   : 'border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
-              Odontologia Integrada
+              <span className="w-2 h-2 rounded-full bg-[#881337]"></span>
+              <span>Odontologia (Granada)</span>
             </button>
           </div>
         </div>
@@ -132,7 +129,7 @@ export function LoginFields() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="Matrícula ou e-mail"
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 outline-none transition-all font-mono"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-[#002B49] focus:ring-2 focus:ring-[#002B49]/10 outline-none transition-all font-mono"
             />
           </div>
         </div>
@@ -149,17 +146,17 @@ export function LoginFields() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 outline-none transition-all font-mono"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-[#002B49] focus:ring-2 focus:ring-[#002B49]/10 outline-none transition-all font-mono"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex justify-center items-center gap-2"
+          className="w-full bg-[#002B49] hover:bg-[#001D33] text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex justify-center items-center gap-2 border border-[#001D33]"
         >
-          <ArrowRightOnRectangleIcon className="w-4 h-4" />
-          <span>Acessar Ambiente Clínico</span>
+          <ArrowRightOnRectangleIcon className="w-4 h-4 text-[#FFB800]" />
+          <span>Acessar Ambiente Clínico UNINASSAU</span>
         </button>
       </form>
 
@@ -168,69 +165,118 @@ export function LoginFields() {
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
             <UserGroupIcon className="w-3.5 h-3.5 text-slate-500" />
-            <span>Simulação Imediata de Perfis (Banca / Docentes)</span>
+            <span>Preenchimento Rápido para Avaliação (Banca / Docentes)</span>
           </span>
-          <span className="text-[9px] bg-slate-200 text-slate-700 font-mono font-bold px-1.5 py-0.5 rounded">
-            RBAC Ativo
+          <span className="text-[9px] bg-[#002B49] text-[#FFB800] font-mono font-bold px-1.5 py-0.5 rounded">
+            RBAC
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-1.5 text-xs">
           <button
             type="button"
-            onClick={() => handleQuickLogin('estagiario_psico', '/psi/prontuario')}
+            onClick={() => {
+              setActiveRole('estudante');
+              setSelectedCourse('psicologia');
+              setIdentifier('16032935');
+              setPassword('unicare123');
+            }}
             className="p-2 rounded-xl bg-white hover:bg-blue-50/60 border border-slate-200 hover:border-blue-300 text-left transition-all shadow-2xs"
           >
-            <div className="font-bold text-slate-900 text-[11px]">Estag. Psicologia</div>
-            <div className="text-[9px] text-slate-500">Prontuário SPA (CFP 06/2019)</div>
+            <div className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-700"></span>
+              <span>Estag. Psicologia</span>
+            </div>
+            <div className="text-[9px] text-slate-500">Rikelme (CFP 06/2019)</div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleQuickLogin('estagiario_odonto', '/ficha-odonto')}
-            className="p-2 rounded-xl bg-white hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-300 text-left transition-all shadow-2xs"
+            onClick={() => {
+              setActiveRole('estudante');
+              setSelectedCourse('odontologia');
+              setIdentifier('16024402');
+              setPassword('unicare123');
+            }}
+            className="p-2 rounded-xl bg-white hover:bg-rose-50/60 border border-slate-200 hover:border-rose-300 text-left transition-all shadow-2xs"
           >
-            <div className="font-bold text-slate-900 text-[11px]">Estag. Odonto</div>
-            <div className="text-[9px] text-slate-500">Ficha Clínica & Odontograma</div>
+            <div className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#881337]"></span>
+              <span>Estag. Odonto</span>
+            </div>
+            <div className="text-[9px] text-slate-500">Augusto (CFO)</div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleQuickLogin('supervisor_psico', '/psi/supervisao')}
-            className="p-2 rounded-xl bg-white hover:bg-indigo-50/60 border border-slate-200 hover:border-indigo-300 text-left transition-all shadow-2xs"
+            onClick={() => {
+              setActiveRole('docente');
+              setSelectedCourse('psicologia');
+              setIdentifier('DOC-8821');
+              setPassword('unicare123');
+            }}
+            className="p-2 rounded-xl bg-white hover:bg-blue-50/60 border border-slate-200 hover:border-blue-300 text-left transition-all shadow-2xs"
           >
-            <div className="font-bold text-slate-900 text-[11px]">Supervisor Psico</div>
-            <div className="text-[9px] text-slate-500">Prof. Robert (Vistos)</div>
+            <div className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-700"></span>
+              <span>Supervisor Psico</span>
+            </div>
+            <div className="text-[9px] text-slate-500">Prof. Robert (CRP 19/0844)</div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleQuickLogin('supervisor_odonto', '/supervisao')}
-            className="p-2 rounded-xl bg-white hover:bg-indigo-50/60 border border-slate-200 hover:border-indigo-300 text-left transition-all shadow-2xs"
+            onClick={() => {
+              setActiveRole('docente');
+              setSelectedCourse('odontologia');
+              setIdentifier('DOC-9122');
+              setPassword('unicare123');
+            }}
+            className="p-2 rounded-xl bg-white hover:bg-rose-50/60 border border-slate-200 hover:border-rose-300 text-left transition-all shadow-2xs"
           >
-            <div className="font-bold text-slate-900 text-[11px]">Supervisora Odonto</div>
-            <div className="text-[9px] text-slate-500">Profa. Bianca (CFO)</div>
+            <div className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#881337]"></span>
+              <span>Supervisora Odonto</span>
+            </div>
+            <div className="text-[9px] text-slate-500">Profa. Bianca (CRO 4512)</div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleQuickLogin('recepcao', '/recepcao')}
+            onClick={() => {
+              setActiveRole('recepcao');
+              setSelectedCourse('odontologia');
+              setIdentifier('REC-2026-01');
+              setPassword('unicare123');
+            }}
             className="p-2 rounded-xl bg-white hover:bg-amber-50/60 border border-slate-200 hover:border-amber-300 text-left transition-all shadow-2xs"
           >
-            <div className="font-bold text-slate-900 text-[11px]">Recepção Central</div>
-            <div className="text-[9px] text-slate-500">Bloqueio Clínico (RN-001)</div>
+            <div className="font-bold text-slate-900 text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]"></span>
+              <span>Recepção Central</span>
+            </div>
+            <div className="text-[9px] text-slate-500">Agenda & Bloqueio RN-001</div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleQuickLogin('rt_master', '/rt/relatorios')}
-            className="p-2 rounded-xl bg-white hover:bg-purple-50/60 border border-slate-200 hover:border-purple-300 text-left transition-all shadow-2xs"
+            onClick={() => {
+              setActiveRole('docente');
+              setSelectedCourse('psicologia');
+              setIdentifier('RT-001');
+              setPassword('unicare123');
+            }}
+            className="p-2 rounded-xl bg-white hover:bg-indigo-50/60 border border-slate-200 hover:border-indigo-300 text-left transition-all shadow-2xs"
           >
-            <div className="font-bold text-indigo-950 text-[11px]">RT Master (Dra. Camila)</div>
-            <div className="text-[9px] text-indigo-600 font-medium">Custódia & Indicadores</div>
+            <div className="font-bold text-[#002B49] text-[11px] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
+              <span>RT Master (Dra. Camila)</span>
+            </div>
+            <div className="text-[9px] text-indigo-700 font-medium">Custódia & Indicadores</div>
           </button>
         </div>
       </div>
     </div>
+
   );
 }

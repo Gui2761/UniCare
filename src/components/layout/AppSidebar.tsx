@@ -13,7 +13,7 @@ import {
 } from '../icons/CorporateIcons';
 
 export function AppSidebar() {
-  const { user, logout, switchUser } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Para o perfil de RT Master: seletor de visão
@@ -24,29 +24,24 @@ export function AppSidebar() {
     navigate('/login');
   };
 
-  const handleSwitchUserAndNavigate = async (presetKey: string) => {
-    await switchUser(presetKey);
-    if (presetKey === 'estagiario_psico') {
-      navigate('/psi/prontuario');
-    } else if (presetKey === 'supervisor_psico') {
-      navigate('/psi/supervisao');
-    } else if (presetKey === 'estagiario_odonto') {
-      navigate('/ficha-odonto');
-    } else if (presetKey === 'supervisor_odonto') {
-      navigate('/supervisao');
-    } else if (presetKey === 'recepcao') {
-      navigate('/recepcao');
-    } else if (presetKey === 'rt_master') {
-      navigate('/rt/relatorios');
+  const getLinkStyle = ({ isActive }: { isActive: boolean }) => {
+    let activeClass = 'bg-slate-900 text-white shadow-xs';
+    if (isPsicoUser) {
+      activeClass = 'bg-blue-700 text-white shadow-xs';
+    } else if (isOdontoUser) {
+      activeClass = 'bg-[#881337] text-white shadow-xs';
+    } else if (isRecepcao) {
+      activeClass = 'bg-[#B45309] text-white shadow-xs';
+    } else if (isRT) {
+      activeClass = 'bg-[#002B49] text-white shadow-xs';
     }
-  };
 
-  const getLinkStyle = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
+    return `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
       isActive
-        ? 'bg-slate-900 text-white shadow-xs'
-        : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
+        ? activeClass
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
     }`;
+  };
 
   const isPsicoUser = user?.curso === 'psicologia' && user?.perfil !== 'rt' && user?.perfil !== 'recepcao';
   const isOdontoUser = user?.curso === 'odontologia' && user?.perfil !== 'rt' && user?.perfil !== 'recepcao';
@@ -56,6 +51,15 @@ export function AppSidebar() {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 justify-between select-none z-30 shadow-2xs">
       <div>
+        {/* Faixa Institucional UNINASSAU Oficial */}
+        <div className="bg-[#002B49] px-4 py-2 flex items-center justify-between text-white text-[10px] font-bold tracking-wider border-b border-[#001D33]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#FFB800] inline-block shadow-xs"></span>
+            <span className="tracking-widest font-black text-slate-100">UNINASSAU</span>
+          </div>
+          <span className="text-[#FFB800] uppercase text-[9px] font-mono tracking-tight font-bold">Campus Aracaju</span>
+        </div>
+
         {/* Cabeçalho da Marca & Curso */}
         <div className="p-4 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-3">
@@ -64,10 +68,10 @@ export function AppSidebar() {
                 isPsicoUser
                   ? 'bg-blue-700'
                   : isOdontoUser
-                  ? 'bg-emerald-700'
+                  ? 'bg-[#881337]'
                   : isRT
-                  ? 'bg-indigo-700'
-                  : 'bg-slate-800'
+                  ? 'bg-[#002B49]'
+                  : 'bg-[#B45309]'
               }`}
             >
               {isPsicoUser ? 'SPA' : isOdontoUser ? 'ODO' : isRT ? 'RT' : 'REC'}
@@ -83,12 +87,12 @@ export function AppSidebar() {
                   : 'UniCare Recepção'}
               </h1>
               <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 truncate">
-                Hospital UNINASSAU
+                Hospital-Escola Integrado
               </p>
             </div>
           </div>
 
-          {/* Sub-badge normativo específico do curso */}
+          {/* Sub-badge normativo específico do curso com cor oficial */}
           <div className="mt-2.5">
             {isPsicoUser && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/70">
@@ -96,7 +100,7 @@ export function AppSidebar() {
               </span>
             )}
             {isOdontoUser && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-[#881337] border border-rose-200/70">
                 Supervisão Clínica CFO
               </span>
             )}
@@ -106,12 +110,13 @@ export function AppSidebar() {
               </span>
             )}
             {isRT && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-[#002B49] border border-indigo-200/70">
                 Diretoria Técnica & Compliance
               </span>
             )}
           </div>
         </div>
+
 
         {/* MÓDULO EXCLUSIVO DA RT MASTER: Seletor de Visão de Curso */}
         {isRT && (
@@ -278,70 +283,16 @@ export function AppSidebar() {
           </div>
 
           <div className="flex items-center gap-1">
-            {/* Popover Simulação de Perfil */}
-            <div className="relative group">
-              <button
-                type="button"
-                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-slate-200/80 shadow-2xs"
-                title="Alternar Perfil Institucional"
-              >
-                <UserGroupIcon className="w-3.5 h-3.5" />
-              </button>
+            {/* Botão de Simulação de Perfil com Senha */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-switch-modal'))}
+              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-slate-200/80 shadow-2xs"
+              title="Alternar Perfil com Autenticação de Senha"
+            >
+              <UserGroupIcon className="w-3.5 h-3.5" />
+            </button>
 
-              <div className="hidden group-hover:block absolute right-0 bottom-full mb-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2.5 w-64 z-50 text-xs">
-                <p className="font-bold text-slate-400 px-2 py-1 mb-1 border-b border-slate-100 uppercase tracking-wider text-[10px]">
-                  Simular Perfil Corporativo:
-                </p>
-
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-bold text-blue-700 uppercase px-2 pt-1">Psicologia Clínica:</p>
-                  <button
-                    onClick={() => handleSwitchUserAndNavigate('estagiario_psico')}
-                    className="w-full text-left px-2 py-1.5 hover:bg-blue-50/70 rounded-lg text-slate-800 text-[11px] font-medium"
-                  >
-                    Estudante (Rikelme - Psico)
-                  </button>
-                  <button
-                    onClick={() => handleSwitchUserAndNavigate('supervisor_psico')}
-                    className="w-full text-left px-2 py-1.5 hover:bg-blue-50/70 rounded-lg text-slate-800 text-[11px] font-medium"
-                  >
-                    Supervisor (Prof. Robert - Psico)
-                  </button>
-
-                  <p className="text-[9px] font-bold text-emerald-800 uppercase px-2 pt-2 border-t border-slate-100">
-                    Odontologia Integrada:
-                  </p>
-                  <button
-                    onClick={() => handleSwitchUserAndNavigate('estagiario_odonto')}
-                    className="w-full text-left px-2 py-1.5 hover:bg-emerald-50/70 rounded-lg text-slate-800 text-[11px] font-medium"
-                  >
-                    Estudante (Augusto - Odonto)
-                  </button>
-                  <button
-                    onClick={() => handleSwitchUserAndNavigate('supervisor_odonto')}
-                    className="w-full text-left px-2 py-1.5 hover:bg-emerald-50/70 rounded-lg text-slate-800 text-[11px] font-medium"
-                  >
-                    Supervisora (Profa. Bianca - Odonto)
-                  </button>
-
-                  <p className="text-[9px] font-bold text-slate-500 uppercase px-2 pt-2 border-t border-slate-100">
-                    Gestão Geral & Atendimento:
-                  </p>
-                  <button
-                    onClick={() => handleSwitchUserAndNavigate('recepcao')}
-                    className="w-full text-left px-2 py-1.5 hover:bg-amber-50/70 rounded-lg text-amber-900 text-[11px] font-medium"
-                  >
-                    Recepção Geral
-                  </button>
-                  <button
-                    onClick={() => handleSwitchUserAndNavigate('rt_master')}
-                    className="w-full text-left px-2 py-1.5 hover:bg-indigo-50/70 rounded-lg text-indigo-900 text-[11px] font-bold"
-                  >
-                    RT Master (Dra. Camila)
-                  </button>
-                </div>
-              </div>
-            </div>
 
             <button
               onClick={handleLogout}
