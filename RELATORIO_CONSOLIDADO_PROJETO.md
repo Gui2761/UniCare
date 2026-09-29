@@ -45,31 +45,8 @@ flowchart TD
 
 ---
 
-## 2. Histórico Evolutivo e Solicitações do Usuário
 
-Abaixo está o registro cronológico completo de todas as solicitações, iterações e intervenções realizadas ao longo do ciclo de desenvolvimento:
-
-| Etapa | Solicitação do Usuário | Ação Técnica Implementada |
-| :--- | :--- | :--- |
-| **01** | *"fez tudo da documentação? todas as telas tudo q foi proposto"* | Auditoria completa contra a especificação funcional original; identificação de lacunas de formulários e rotas de homologação. |
-| **02** | *"continua"* | Implementação do fluxo de homologação de evolução clínica de Psicologia e Odontologia com validação de status em tempo real. |
-| **03** | *"user as cores dos cursos tbm user as cores da faculdade uninassau"* | Mapeamento da paleta: Azul Marinho Institucional (`#002B49`), Amarelo Ouro (`#FFD100`), Azul Cobalto/Safira para Psicologia e Vinho/Bordô (`#881337`) para Odontologia. |
-| **04** | *"nessa de troca rapida de conta precisa colocar a senha para trocar de conta"* | Eliminação de login sem senha; implementação de modal de autenticação obrigatória com credencial institucional (`unicare123`). |
-| **05** | *"verifique se todas as funções tão funcionando a de login tá meio errado"* | Correção da validação de credenciais, token JWT no backend FastAPI e sincronização de perfis padrão no `AuthContext`. |
-| **06** | *"isso aq tá meio errado e deveria ter menu de login separados pq acho q tá dando conflito quando clica para auto preenchimento"* | Separação física e lógica da tela de login em 3 abas independentes: **Psicologia (SPA)**, **Odontologia Integrada** e **Administração / RT Master / Recepção**, evitando colisões de campos de autocompletar do navegador. |
-| **07** | *"se o item n pode ser acessado pelo usuario nem deveria aparecer para ele"* | Refatoração rigorosa do menu lateral (`AppSidebar.tsx`), aplicando princípio do menor privilégio: estagiários e recepcionistas deixaram de visualizar menus de supervisão e RT. |
-| **08** | *"crie um menu para cada perfil com animação no fundo com a cor e os caralhos com a logo do curso"* | Criação de atmosfera visual imersiva: gradientes dinâmicos que transicionam conforme a aba ativa (Cobalto para SPA, Bordô para Odonto, Marinho para RT/Recepção) e inclusão de emblemas vetoriais dedicados dos conselhos de classe. |
-| **09** | *"troque essa logo ai"* | Substituição da logo placeholder pela imagem do brasão heráldico oficial da UNINASSAU (`uninassau-crest.png`) em alta resolução. |
-| **10** | *"coloque uma cor no fundo q muda de acordo com o tipo de perfil dentro do sistema tbm"* | Aplicação de gradiente dinâmico com atmosfera sutil no layout interno de acordo com o curso do usuário ativo. |
-| **11** | *"os supervisores tem q ter uma tela para criar perfis de estagiarios e os rt master tem q criar supervisores, estagiarios e recepção"* | Criação de modais e painéis de criação dinâmica de usuários na RT Master (`RTStatsDashboard.tsx`), Supervisor de Psicologia (`PsySupervisionPage.tsx`) e Supervisor de Odonto (`ClinicalPairs.tsx`). |
-| **12** | *"tem q ter um fundo branco atras da logo pq ela ta transparente o escudo grandão tem q ser trocado"* | Envelope da logo em container branco sólido (`bg-white p-1 rounded-xl shadow-xs`) em todos os componentes visuais; remoção do escudo flutuante de 160px que obstruía os textos e substituição por componente vetorial limpo. |
-| **13** | *"as coisas q vc colocou de cor ficou emcima das coisas"* | Remoção total dos orbes com `blur-3xl` e offsets negativos que manchavam os cabeçalhos em azul; restauração de fundos sólidos e profissionais (`bg-slate-100` e `bg-slate-50`). |
-| **14** | *"e lugar de criar usuarios tem q pode editar o usuario e apagar"* | Implementação de ciclo de vida completo de usuários: métodos `updateUser` e `deleteUser` no `AuthContext`, modais de edição com formulários pré-preenchidos e modais de confirmação de exclusão em todas as telas de gestão. |
-| **15** | *"enviou ao github?"* | Resolução de permissão de escrita 403; criação de fork, configuração do remote `origin` apontando para github.com/Gui2761/UniCare e execução do push bem-sucedido de 16 commits (`b5de322..f022c69`). |
-
----
-
-## 3. Matriz de Requisitos Funcionais (Spec-Kit)
+## 2. Matriz de Requisitos Funcionais (Spec-Kit)
 
 ### RF-001: Gestão de Recepção e Triagem
 - Cadastro rápido de pacientes com validação de CPF e dados de contato.
@@ -116,7 +93,7 @@ Abaixo está o registro cronológico completo de todas as solicitações, itera�
 
 ---
 
-## 4. Arquitetura Técnica e Engenharia de Software
+## 3. Arquitetura Técnica e Engenharia de Software
 
 ### Frontend
 - **Framework:** React 19 com TypeScript.
@@ -135,7 +112,7 @@ Abaixo está o registro cronológico completo de todas as solicitações, itera�
 
 ---
 
-## 5. Estrutura de Arquivos do Projeto
+## 4. Estrutura de Arquivos do Projeto
 
 ```text
 UniCare/
@@ -180,7 +157,7 @@ UniCare/
 
 ---
 
-## 6. Credenciais Institucionais de Demonstração
+## 5. Credenciais Institucionais de Demonstração
 
 Todos os usuários abaixo utilizam a senha institucional obrigatória:  
 **`unicare123`**
@@ -196,7 +173,7 @@ Todos os usuários abaixo utilizam a senha institucional obrigatória:
 
 ---
 
-## 7. Status de Validação e Próximos Passos
+## 6. Status de Validação e Próximos Passos
 
 - **Compilação TypeScript & Vite:** 100% OK (0 erros de tipagem).
 - **Testes Backend Pytest:** 8 testes aprovados com 100% de taxa de sucesso.
