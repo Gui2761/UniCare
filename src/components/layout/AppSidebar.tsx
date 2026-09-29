@@ -54,11 +54,11 @@ export function AppSidebar() {
         {/* Faixa Institucional UNINASSAU Oficial com Brasão Veritas */}
         <div className="bg-[#002B49] px-3.5 py-2 flex items-center justify-between text-white border-b border-[#001D33] shadow-xs">
           <div className="flex items-center gap-2">
-            <div className="p-0.5 bg-white rounded-md shadow-2xs">
+            <div className="p-1 bg-white rounded-md shadow-xs flex items-center justify-center">
               <img
                 src="/uninassau-crest.png"
                 alt="Brasão UNINASSAU"
-                className="h-5 w-auto object-contain"
+                className="h-6 w-auto object-contain"
               />
             </div>
             <div className="flex flex-col">

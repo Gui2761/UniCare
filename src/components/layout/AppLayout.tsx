@@ -135,33 +135,11 @@ export function AppLayout({
 
   // Cor de fundo dinâmica do sistema conforme o perfil e curso logado
   const getLayoutAtmosphere = () => {
-    if (isPsico && !isRT) {
-      return 'bg-gradient-to-br from-blue-50/70 via-slate-50 to-indigo-50/40';
-    }
-    if (isOdonto && !isRT && user?.perfil !== 'recepcao') {
-      return 'bg-gradient-to-br from-rose-50/60 via-slate-50 to-pink-50/30';
-    }
-    if (user?.perfil === 'recepcao') {
-      return 'bg-gradient-to-br from-amber-50/60 via-slate-50 to-orange-50/30';
-    }
-    // RT Master / Padrão Institucional UNINASSAU
-    return 'bg-gradient-to-br from-slate-100 via-sky-50/40 to-indigo-50/40';
+    return 'bg-slate-50';
   };
 
   return (
-    <div className={`min-h-screen flex font-sans antialiased text-slate-900 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-700 relative ${getLayoutAtmosphere()}`}>
-      {/* Luz ambiente sutil do curso no topo da área de trabalho */}
-      <div
-        className={`fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-15 pointer-events-none transition-all duration-700 ${
-          isPsico
-            ? 'bg-blue-600'
-            : isOdonto
-            ? 'bg-rose-600'
-            : user?.perfil === 'recepcao'
-            ? 'bg-amber-500'
-            : 'bg-[#002B49]'
-        }`}
-      />
+    <div className={`min-h-screen flex font-sans antialiased text-slate-900 selection:bg-blue-100 selection:text-blue-900 ${getLayoutAtmosphere()}`}>
       {/* Sidebar Corporativo com Segregação Estrita */}
       <AppSidebar />
 
@@ -172,11 +150,11 @@ export function AppLayout({
           {/* Breadcrumb & Identificação Institucional UNINASSAU */}
           <div className="flex items-center gap-2.5 text-xs">
             <span className="bg-[#002B49] text-white px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider inline-flex items-center gap-2 border border-[#001D33] shadow-2xs">
-              <span className="p-0.5 bg-white rounded-xs flex items-center justify-center">
+              <span className="p-1 bg-white rounded-md flex items-center justify-center shadow-xs">
                 <img
                   src="/uninassau-crest.png"
                   alt="Brasão UNINASSAU"
-                  className="h-3.5 w-auto object-contain"
+                  className="h-4 w-auto object-contain"
                 />
               </span>
               <span className="font-mono text-[#FFD100]">UNINASSAU</span>

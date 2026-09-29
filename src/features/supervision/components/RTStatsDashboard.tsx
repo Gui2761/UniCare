@@ -17,11 +17,13 @@ import {
   XMarkIcon,
   CheckCircleIcon,
   KeyIcon,
+  PencilSquareIcon,
+  TrashIcon,
 } from '../../../components/icons/CorporateIcons';
 
 export function RTStatsDashboard() {
   const { pacientes, agendamentos, evolucoesPsico, planosTratamento } = useClinic();
-  const { allUsers, createUser } = useAuth();
+  const { allUsers, createUser, updateUser, deleteUser } = useAuth();
   const [stats, setStats] = useState<RelatorioEstatisticas | null>(null);
   const [logs, setLogs] = useState<ApiLogAuditoria[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,6 +41,17 @@ export function RTStatsDashboard() {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userSuccessMsg, setUserSuccessMsg] = useState('');
   const [userErrorMsg, setUserErrorMsg] = useState('');
+
+  // Estados de Edição e Exclusão de Usuários
+  const [editingUserKey, setEditingUserKey] = useState<string | null>(null);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editNome, setEditNome] = useState('');
+  const [editMatricula, setEditMatricula] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPerfil, setEditPerfil] = useState<RoleType>('supervisor');
+  const [editCurso, setEditCurso] = useState<CourseType>('psicologia');
+  const [editRegistro, setEditRegistro] = useState('');
+  const [userToDelete, setUserToDelete] = useState<{ key: string; nome: string } | null>(null);
 
   // Estado para busca de custódia de prontuários (RF-006)
   const [buscaPaciente, setBuscaPaciente] = useState<string>('');
@@ -149,6 +162,50 @@ export function RTStatsDashboard() {
     setTimeout(() => {
       setUserSuccessMsg('');
     }, 6000);
+  };
+
+  const handleOpenEditUserModal = (key: string, u: any) => {
+    setEditingUserKey(key);
+    setEditNome(u.nome);
+    setEditMatricula(u.matricula);
+    setEditEmail(u.email);
+    setEditPerfil(u.perfil);
+    setEditCurso(u.curso);
+    setEditRegistro(u.registro_profissional || '');
+    setUserErrorMsg('');
+    setShowEditUserModal(true);
+  };
+
+  const handleSaveUserEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUserKey || !editNome.trim() || !editMatricula.trim()) {
+      setUserErrorMsg('Nome completo e Matrícula são obrigatórios.');
+      return;
+    }
+
+    updateUser(editingUserKey, {
+      nome: editNome.trim(),
+      matricula: editMatricula.trim(),
+      email:
+        editEmail.trim() ||
+        `${editNome.trim().toLowerCase().split(' ')[0]}.${editMatricula.trim()}@uninassau.edu.br`,
+      perfil: editPerfil,
+      curso: editPerfil === 'recepcao' ? 'odontologia' : editCurso,
+      registro_profissional: editRegistro.trim() || undefined,
+    });
+
+    setUserSuccessMsg(`Usuário ${editNome.trim()} atualizado com sucesso!`);
+    setShowEditUserModal(false);
+    setEditingUserKey(null);
+    setTimeout(() => setUserSuccessMsg(''), 5000);
+  };
+
+  const handleExecuteDeleteUser = () => {
+    if (!userToDelete) return;
+    deleteUser(userToDelete.key);
+    setUserSuccessMsg(`Usuário ${userToDelete.nome} excluído do sistema com sucesso.`);
+    setUserToDelete(null);
+    setTimeout(() => setUserSuccessMsg(''), 5000);
   };
 
   const usersList = Object.entries(allUsers || {});
@@ -747,12 +804,13 @@ export function RTStatsDashboard() {
                   <th className="py-3 px-3">Registro Profissional</th>
                   <th className="py-3 px-3">Origem</th>
                   <th className="py-3 px-3">Status de Autenticação</th>
+                  <th className="py-3 px-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                    <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
                       Nenhum perfil de usuário localizado com os critérios informados.
                     </td>
                   </tr>
@@ -838,6 +896,26 @@ export function RTStatsDashboard() {
                           <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
                           <span>Habilitado (Senha)</span>
                         </span>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditUserModal(key, u)}
+                            className="p-1.5 text-slate-500 hover:text-[#002B49] hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Editar usuário"
+                          >
+                            <PencilSquareIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserToDelete({ key, nome: u.nome })}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Excluir usuário"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1000,6 +1078,184 @@ export function RTStatsDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Usuário RBAC */}
+      {showEditUserModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shadow-xs">
+                  <PencilSquareIcon className="w-4 h-4 text-[#002B49]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Editar Perfil de Usuário</h3>
+                  <p className="text-[10px] text-slate-500">
+                    Modifique dados cadastrais, perfil RBAC ou registro do profissional/estagiário.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditUserModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveUserEdit} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Tipo de Perfil RBAC *
+                  </label>
+                  <select
+                    value={editPerfil}
+                    onChange={(e) => setEditPerfil(e.target.value as RoleType)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49]"
+                  >
+                    <option value="supervisor">Supervisor Docente</option>
+                    <option value="estagiario">Acadêmico Estagiário</option>
+                    <option value="recepcao">Operador de Recepção</option>
+                    <option value="rt">Responsável Técnico (RT)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Curso / Área de Atuação *
+                  </label>
+                  <select
+                    value={editCurso}
+                    disabled={editPerfil === 'recepcao'}
+                    onChange={(e) => setEditCurso(e.target.value as CourseType)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] disabled:opacity-50"
+                  >
+                    <option value="psicologia">Psicologia (SPA)</option>
+                    <option value="odontologia">Odontologia Integrada</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  value={editNome}
+                  onChange={(e) => setEditNome(e.target.value)}
+                  placeholder="Nome completo do usuário"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] focus:ring-1 focus:ring-[#002B49]/20"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Matrícula Institucional *
+                  </label>
+                  <input
+                    type="text"
+                    value={editMatricula}
+                    onChange={(e) => setEditMatricula(e.target.value)}
+                    placeholder="Matrícula"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] focus:ring-1 focus:ring-[#002B49]/20 font-mono"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Registro Profissional
+                  </label>
+                  <input
+                    type="text"
+                    value={editRegistro}
+                    onChange={(e) => setEditRegistro(e.target.value)}
+                    placeholder="CRP / CRO ou Período"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  E-mail Institucional
+                </label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="E-mail"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-[#002B49] font-mono text-[11px]"
+                />
+              </div>
+
+              {userErrorMsg && (
+                <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+                  {userErrorMsg}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowEditUserModal(false)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-bold transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#002B49] hover:bg-[#001D33] text-white rounded-xl font-bold transition-all shadow-xs border border-[#001D33] flex items-center gap-1.5"
+                >
+                  <CheckCircleIcon className="w-4 h-4 text-emerald-400" />
+                  <span>Salvar Alterações</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Usuário */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                <TrashIcon className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Confirmar Exclusão de Usuário</h3>
+                <p className="text-[11px] text-slate-500">Revogação imediata de credenciais</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Tem certeza de que deseja excluir permanentemente o cadastro de <strong className="text-slate-900">{userToDelete.nome}</strong>? Este perfil não aparecerá mais na tela de login e seus acessos serão desativados.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteDeleteUser}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+              >
+                <TrashIcon className="w-4 h-4" />
+                <span>Excluir Usuário</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

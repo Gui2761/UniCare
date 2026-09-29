@@ -80,6 +80,8 @@ interface AuthContextType {
   logout: () => void;
   switchUser: (presetKey: string) => Promise<void>;
   createUser: (userData: Omit<User, 'id'>) => string;
+  updateUser: (key: string, updatedData: Partial<User>) => void;
+  deleteUser: (key: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -162,6 +164,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newKey;
   };
 
+  const updateUser = (key: string, updatedData: Partial<User>) => {
+    setAllUsers((prev) => {
+      const existing = prev[key];
+      if (!existing) return prev;
+      const updatedUser: User = { ...existing, ...updatedData };
+      const updated = { ...prev, [key]: updatedUser };
+      try {
+        localStorage.setItem(ALL_USERS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Falha ao persistir atualização do usuário:', e);
+      }
+      if (user && (user.matricula === existing.matricula || user.id === existing.id)) {
+        setUser(updatedUser);
+      }
+      return updated;
+    });
+  };
+
+  const deleteUser = (key: string) => {
+    setAllUsers((prev) => {
+      const existing = prev[key];
+      const updated = { ...prev };
+      delete updated[key];
+      try {
+        localStorage.setItem(ALL_USERS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Falha ao persistir remoção do usuário:', e);
+      }
+      if (user && existing && (user.matricula === existing.matricula || user.id === existing.id)) {
+        setUser(PRESET_USERS.estagiario_psico);
+      }
+      return updated;
+    });
+  };
+
   const loginWithCredentials = async (emailOuMatricula: string, senha: string) => {
     try {
       const res = await api.login(emailOuMatricula, senha);
@@ -203,6 +240,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         switchUser,
         createUser,
+        updateUser,
+        deleteUser,
       }}
     >
       {children}

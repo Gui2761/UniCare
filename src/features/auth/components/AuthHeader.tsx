@@ -4,7 +4,7 @@ export function AuthHeader() {
   return (
     <header className="flex justify-between items-center px-6 sm:px-8 py-3.5 bg-white border-b border-slate-200/80 shadow-2xs">
       <div className="flex items-center gap-3.5">
-        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center p-1 shadow-xs border border-slate-200">
+        <div className="h-11 w-11 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm border border-slate-200 shrink-0">
           <img
             src="/uninassau-crest.png"
             alt="Brasão Oficial UNINASSAU Veritas"
